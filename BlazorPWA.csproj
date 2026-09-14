@@ -7,10 +7,10 @@
     <OverrideHtmlAssetPlaceholders>true</OverrideHtmlAssetPlaceholders>
     <!--
     <ServiceWorkerAssetsManifest>service-worker-assets.js</ServiceWorkerAssetsManifest>
+    <StaticWebAssetBasePath>lumenyx</StaticWebAssetBasePath> 
     -->
   
-    <StaticWebAssetBasePath>lumenyx</StaticWebAssetBasePath>
-  
+    
   </PropertyGroup>
 
   <ItemGroup>
