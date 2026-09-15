@@ -1,0 +1,79 @@
+﻿@page "/cliente"
+
+<PageTitle>Lumenyx</PageTitle>
+
+@page "/installazioni-netflix-colori"
+
+<style>
+    body, html, .page, main, .main, article, .content, .px-4 {
+        background-color: #141414 !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+</style>
+@page "/installazioni-netflix-chart"
+
+<div class="netflix-browse">
+
+    <div class="row-container">
+        <h2 class="row-header">Installazioni</h2>
+
+        <div class="netflix-grid">
+            @foreach (var card in ListaInstallazioni)
+            {
+                <!-- Associa la classe cromatica della riga centrale del grafico -->
+                <div class="netflix-item @card.ClasseColore">
+
+                    <div class="video-thumbnail">
+                        <div class="thumbnail-overlay">
+                            <span class="system-code-badge">@card.Codice</span>
+                            <h3 class="thumbnail-title">@card.Titolo</h3>
+                        </div>
+                    </div>
+
+                    <div class="hover-details">
+                        <div class="action-buttons">
+                            <div class="left-actions">
+                                <button class="btn-circle play" title="Monitora">▶</button>
+                                <button class="btn-circle add" title="Aggiungi">+</button>
+                                <button class="btn-circle like" title="Segnala">👍</button>
+                            </div>
+                            <button class="btn-circle info" title="Info">ℹ</button>
+                        </div>
+
+                        <div class="meta-row">
+                            <span class="match-percentage">@card.PercentualeEfficienza% Match</span>
+                            <span class="duration">@card.Posizione</span>
+                        </div>
+
+                        <div class="tags-row">
+                            <span class="status-indicator @card.Stato.ToLower()"></span>
+                            <span class="status-text">@card.Stato</span>
+                        </div>
+
+                        <p class="synopsis">@card.Descrizione</p>
+                    </div>
+                </div>
+            }
+        </div>
+    </div>
+
+</div>
+
+@code {
+    private List<CardItem> ListaInstallazioni = new()
+    {
+        new("SYS-ALFA", "Negozio VIale Strasburgo", "Palermo", "Attivo", 98, "45 monitors interni. 10 Ledwall in vetrina, nessun monitor esterno.", "chart-col-1"),
+        new("SRV-BETA", "Data Center Core", "Roma", "Manutenzione", 74, "Manutenzione programmata del banco batterie UPS 3.", "chart-col-2"),
+        new("WND-GAMMA", "Parco Eolico Offshore", "Napoli", "Attivo", 91, "Generazione costante a 14 nodi. Pale allineate automaticamente.", "chart-col-3"),
+        new("LOG-DELTA", "Hub Logistico", "Bologna", "Offline", 0, "Interruzione alimentazione principale linea est. Squadra sul posto.", "chart-col-4"),
+        new("H2O-EPSILON", "Centrale Idrica P3", "Torino", "Attivo", 95, "Flusso idraulico nominale. Filtri nei parametri di sicurezza.", "chart-col-5"),
+        new("GAS-ZETA", "Turbina a Gas T2", "Genova", "Attivo", 88, "Emissione fumi controllata. Temperatura di esercizio stabile.", "chart-col-6"),
+        new("HYD-ETA", "Impianto Idrogeno", "Venezia", "Manutenzione", 65, "Verifica valvole di sicurezza e sensori di pressione ambiente.", "chart-col-7"),
+        new("BIO-THETA", "Centrale Biomasse", "Firenze", "Attivo", 92, "Alimentazione caldaia a regime ottimale. Giri turbina costanti.", "chart-col-8"),
+        new("NUC-IOTA", "Laboratorio Isotopi", "Trieste", "Attivo", 99, "Schermature intatte. Livelli di radiazione di fondo nominali.", "chart-col-9"),
+        new("GEO-KAPPA", "Geotermico Vulcano", "Catania", "Offline", 0, "Sonda di profondità in sostituzione per corrosione salina.", "chart-col-10")
+    };
+
+    private record CardItem(string Codice, string Titolo, string Posizione, string Stato, int PercentualeEfficienza, string Descrizione, string ClasseColore);
+}

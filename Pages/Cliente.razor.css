@@ -1,0 +1,341 @@
+﻿/* ==========================================================================
+   1. RESET GLOBALE E SOVRASCRITTURA LAYOUT (Elimina i contorni bianchi)
+   ========================================================================== */
+
+::deep main,
+::deep .page,
+::deep .main,
+::deep article,
+::deep .content,
+::deep .px-4 {
+    background-color: #000000 !important; /* Nero assoluto per far risaltare la cartella colori */
+    padding: 0 !important;
+    margin: 0 !important;
+}
+
+:global(body) {
+    background-color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* ==========================================================================
+   2. CONTENITORE PRINCIPALE (Interfaccia Cinema Neon)
+   ========================================================================== */
+
+.netflix-browse {
+    background-color: #000000;
+    color: #fff;
+    min-height: 100vh;
+    padding: 4rem 4%;
+    font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+    box-sizing: border-box;
+}
+
+.row-container {
+    width: 100%;
+}
+
+.row-header {
+    color: #e5e5e5;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin-bottom: 1.5rem;
+    letter-spacing: 0.5px;
+}
+
+/* Griglia responsiva fluida bloccata in altezza per evitare sobbalzi */
+.netflix-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 30px 16px;
+    padding: 10px 0;
+}
+
+/* ==========================================================================
+   3. IL CORPO DELLA CARD (Effetto 3D controllato senza spostare la griglia)
+   ========================================================================== */
+
+.netflix-item {
+    position: relative;
+    background-color: #0d0d0d;
+    border-radius: 4px;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.8);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    /* Transizione fluida che include l'effetto 3D del transform */
+    transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), box-shadow 0.3s ease, border-color 0.3s ease, background-color 0.3s ease;
+}
+
+    /* Micro-zoom 3D fluttuante (non fa saltare le card inferiori) */
+    .netflix-item:hover {
+        transform: scale(1.04) translateZ(0);
+        z-index: 10;
+    }
+
+/* Copertina 16:9 */
+.video-thumbnail {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    border-radius: 4px 4px 0 0;
+}
+
+.thumbnail-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    padding: 14px;
+    box-sizing: border-box;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: linear-gradient(0deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.1) 100%);
+}
+
+.system-code-badge {
+    align-self: flex-start;
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    font-size: 0.65rem;
+    font-weight: 700;
+    padding: 3px 6px;
+    border-radius: 3px;
+    letter-spacing: 0.5px;
+}
+
+.thumbnail-title {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #ffffff;
+    text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+    line-height: 1.2;
+}
+
+/* Pannello dettagli fisso integrato */
+.hover-details {
+    padding: 12px;
+    background-color: #0d0d0d;
+    border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+
+/* ==========================================================================
+   4. PALETTE MACHING (Colori esatti estratti dalla riga centrale del grafico)
+   ========================================================================== */
+
+/* Colore 1: Arancio Zucca */
+.chart-col-1 .video-thumbnail {
+    background: linear-gradient(135deg, #e47128, #a04610);
+}
+
+.chart-col-1:hover {
+    border-color: #e47128;
+    box-shadow: 0 10px 25px rgba(228, 113, 40, 0.2);
+}
+
+/* Colore 2: Giallo Dorato Tech */
+.chart-col-2 .video-thumbnail {
+    background: linear-gradient(135deg, #dfa91b, #97700a);
+}
+
+.chart-col-2:hover {
+    border-color: #dfa91b;
+    box-shadow: 0 10px 25px rgba(223, 169, 27, 0.2);
+}
+
+/* Colore 3: Verde Lime Acido */
+.chart-col-3 .video-thumbnail {
+    background: linear-gradient(135deg, #a7b723, #6a7610);
+}
+
+.chart-col-3:hover {
+    border-color: #a7b723;
+    box-shadow: 0 10px 25px rgba(167, 183, 35, 0.2);
+}
+
+/* Colore 4: Verde Smeraldo Intenso */
+.chart-col-4 .video-thumbnail {
+    background: linear-gradient(135deg, #109148, #055928);
+}
+
+.chart-col-4:hover {
+    border-color: #109148;
+    box-shadow: 0 10px 25px rgba(16, 145, 72, 0.2);
+}
+
+/* Colore 5: Turchese / Cyan Vibrante */
+.chart-col-5 .video-thumbnail {
+    background: linear-gradient(135deg, #009fac, #00656e);
+}
+
+.chart-col-5:hover {
+    border-color: #009fac;
+    box-shadow: 0 10px 25px rgba(0, 159, 172, 0.2);
+}
+
+/* Colore 6: Blu Elettrico / Cobalto */
+.chart-col-6 .video-thumbnail {
+    background: linear-gradient(135deg, #2b61ae, #153c75);
+}
+
+.chart-col-6:hover {
+    border-color: #2b61ae;
+    box-shadow: 0 10px 25px rgba(43, 97, 174, 0.2);
+}
+
+/* Colore 7: Viola / Indigo Profondo */
+.chart-col-7 .video-thumbnail {
+    background: linear-gradient(135deg, #533b93, #301f5c);
+}
+
+.chart-col-7:hover {
+    border-color: #533b93;
+    box-shadow: 0 10px 25px rgba(83, 59, 147, 0.2);
+}
+
+/* Colore 8: Magenta / Fucsia Carico */
+.chart-col-8 .video-thumbnail {
+    background: linear-gradient(135deg, #bb297c, #79114d);
+}
+
+.chart-col-8:hover {
+    border-color: #bb297c;
+    box-shadow: 0 10px 25px rgba(187, 41, 124, 0.2);
+}
+
+/* Colore 9: Crimson Red / Rosso Rubino */
+.chart-col-9 .video-thumbnail {
+    background: linear-gradient(135deg, #c7173e, #820621);
+}
+
+.chart-col-9:hover {
+    border-color: #c7173e;
+    box-shadow: 0 10px 25px rgba(199, 23, 62, 0.2);
+}
+
+/* Colore 10: Rosso Mattone Scuro */
+.chart-col-10 .video-thumbnail {
+    background: linear-gradient(135deg, #cb472b, #892814);
+}
+
+.chart-col-10:hover {
+    border-color: #cb472b;
+    box-shadow: 0 10px 25px rgba(203, 71, 43, 0.2);
+}
+
+
+/* ==========================================================================
+   5. COMPONENTI INTERNI (Pulsanti e Testi)
+   ========================================================================== */
+
+.action-buttons {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 10px;
+}
+
+.left-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.btn-circle {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.3);
+    background-color: rgba(0, 0, 0, 0.5);
+    color: #fff;
+    font-size: 0.75rem;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s;
+}
+
+    .btn-circle:hover {
+        border-color: #fff;
+        background-color: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-circle.play {
+        background-color: #fff;
+        color: #000;
+        border: none;
+        padding-left: 2px;
+    }
+
+        .btn-circle.play:hover {
+            background-color: #e6e6e6;
+        }
+
+.meta-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    margin-bottom: 6px;
+}
+
+.match-percentage {
+    color: #46d369;
+}
+
+.duration {
+    color: #8e8e93;
+    font-weight: 400;
+}
+
+.tags-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    margin-bottom: 6px;
+}
+
+.status-indicator {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+    .status-indicator.attivo {
+        background-color: #46d369;
+    }
+
+    .status-indicator.manutenzione {
+        background-color: #ff9900;
+    }
+
+    .status-indicator.offline {
+        background-color: #b9090b;
+    }
+
+.status-text {
+    color: #8e8e93;
+    text-transform: uppercase;
+    font-size: 0.6rem;
+    letter-spacing: 0.5px;
+}
+
+.synopsis {
+    font-size: 0.7rem;
+    color: #8e8e93;
+    line-height: 1.3;
+    margin: 0;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}

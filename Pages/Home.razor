@@ -1,7 +1,64 @@
-﻿@page "/"
+﻿@inject HttpClient Http
+
+
+@page "/"
 
 <PageTitle>Home</PageTitle>
 
 <h1>LUMENYX TEST 003</h1>
 
 Welcome to your new app.
+
+
+
+<button class="btn btn-primary" @onclick="InviaWebhook">
+    Test webhook
+</button>
+
+<p>@Messaggio</p>
+
+<NavLink href="/Cliente" >
+    Apri area Cliente
+</NavLink>
+
+
+
+
+
+@code {
+
+    private string Messaggio = "";
+
+    private async Task InviaWebhook()
+    {
+        try
+        {
+            var payload = new
+            {
+                source = "pwa",
+                deviceId = "TV123",
+                action = "test"
+            };
+
+            var response = await Http.PostAsJsonAsync(
+                "https://nocodb.irib.cnr.it/n8n/webhook-test/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e",
+                payload);
+
+            //var result = await response.Content.ReadFromJsonAsync<WebhookResponse>();
+
+            var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+            
+            Messaggio = result?["message"]?.ToString();
+
+            //var testo = await response.Content.ReadAsStringAsync();
+            //Messaggio = $"HTTP {(int)response.StatusCode} - {testo}";
+        }
+        catch (Exception ex)
+        {
+            Messaggio = ex.ToString();
+        }
+    }
+
+}
+
+
