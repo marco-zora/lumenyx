@@ -1,6 +1,11 @@
 
+// BUILD_TIMESTAMP
+const CACHE_NAME = 'pwa-cache-v1';
+
+
+
 self.addEventListener('install', event => {
-    self.skipWaiting();
+    self.skipWaiting(); // Forza il nuovo SW a diventare attivo subito
 });
 
 self.addEventListener('activate', event => {
