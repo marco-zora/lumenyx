@@ -21,13 +21,14 @@
 
 @code {
 
-    private bool isLoading = true;
+    private bool isLoading;
 
     private List<DeviceItem> ListaDevices = new();
 
 
     protected override async Task OnInitializedAsync()
     {
+        isLoading = true;   
         await CaricaDevices();
     }
 
