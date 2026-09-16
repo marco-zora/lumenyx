@@ -39,7 +39,7 @@ jobs:
           
           # Applica la data in cima al file del service worker generato nella cartella di pubblicazione
           # Nota: Se il tuo file si chiama 'service-worker.published.js', sostituisci il nome qui sotto.
-          sed -i "1i // Versione Build Automatica: $TIMESTAMP" ./bin/Release/net10.0/publish/wwwroot/service-worker.published.js
+          sed -i "1i // Versione Build Automatica: $TIMESTAMP" ./bin/Release/net10.0/publish/wwwroot/service-worker.js
 # -----------------------------
 
       - name: Setup Pages
