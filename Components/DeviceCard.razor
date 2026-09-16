@@ -1,0 +1,229 @@
+﻿@inject IJSRuntime JS
+
+<div class="device-card">
+
+    <div class="card-header">
+
+        <div class="device-heading">
+
+            <div class="device-code">
+                @Item.Codice
+            </div>
+
+            <div class="device-type">
+                @Item.Tipo
+            </div>
+
+        </div>
+
+        <div class="status-badge @GetStatusClass()">
+            @Item.Stato
+        </div>
+
+    </div>
+
+    <div class="video-preview">
+
+        <video id="video-@Item.Codice" 
+               autoplay
+               muted
+               loop
+               playsinline
+               preload="metadata">
+
+            <source src="@Item.VideoUrl"
+                    type="video/mp4" />          
+        </video>
+
+    </div>
+
+    <div class="device-description">
+        @Item.Descrizione
+    </div>
+
+    <div class="device-info">
+
+        <div class="info-row">
+            <span>Ultimo update</span>
+            <strong>@Item.DataUpdate</strong>
+        </div>
+
+        <div class="info-row">
+            <span>Ultima manutenzione</span>
+            <strong>@Item.DataUltimaManutenzione</strong>
+        </div>
+
+    </div>
+
+    <div class="device-actions">
+
+        <!-- REWIND -->
+
+        <button type="button"
+                class="action-button"
+                title="Rewind">
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M11 18V6L2 12l9 6zm11 0V6l-9 6 9 6z" />
+            </svg>
+
+        </button>
+
+        <!-- PLAY -->
+
+        <button type="button"
+                class="action-button"
+                title="Play"
+                @onclick="PlayVideo">
+            
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M8 5v14l11-7z" />
+            </svg>
+
+        </button>
+
+        <!-- PAUSE -->
+
+        <button type="button"
+                class="action-button"
+                title="Pause"
+                @onclick="PauseVideo">
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M6 5h4v14H6zm8 0h4v14h-4z" />
+            </svg>
+
+        </button>
+
+        <!-- STOP -->
+
+        <button type="button"
+                class="action-button"
+                title="Stop"
+                @onclick="StopVideo">
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M6 6h12v12H6z" />
+            </svg>
+
+        </button>
+
+        <!-- FORWARD -->
+
+        <button type="button"
+                class="action-button"
+                title="Forward">
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M13 6v12l9-6-9-6zM2 6v12l9-6-9-6z" />
+            </svg>
+
+        </button>
+
+        <!-- FULL SCREEN / EXIT FULL SCREEN -->
+
+        @if (!IsFullscreen)
+        {
+            <button type="button"
+                    class="action-button"
+                    title="Fullscreen"
+                    @onclick="FullscreenVideo">
+
+                <svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                          d="M3 3h7v2H5v5H3V3zm16 0h2v7h-2V5h-5V3h7zM3 14h2v5h5v2H3v-7zm16 0h2v7h-7v-2h5v-5z" />
+                </svg>
+
+            </button>
+        }
+        else
+        {
+            <button type="button"
+                    class="action-button"
+                    title="Exit Fullscreen"
+                    @onclick="ExitFullscreen">
+
+                <svg viewBox="0 0 24 24">
+                    <path fill="currentColor"
+                          d="M8 3v2H5v3H3V3h5zm13 0v5h-2V5h-3V3h5zM3 16h2v3h3v2H3v-5zm16 3v-3h2v5h-5v-2h3z" />
+                </svg>
+
+            </button>
+        }
+
+    </div>
+
+    
+
+</div>
+
+@code
+{
+    [Parameter]
+    public DeviceItem Item { get; set; } = default!;
+
+    private bool IsFullscreen;
+
+    private string GetStatusClass()
+    {
+        return Item.Stato.ToLowerInvariant() switch
+        {
+            "online" => "status-online",
+            "offline" => "status-offline",
+            "manutenzione" => "status-maintenance",
+            _ => "status-default"
+        };
+    }
+
+    // PLAY VIDEO FUNCTION
+    private async Task PlayVideo()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            $"document.getElementById('video-{Item.Codice}').play();");
+    }
+    // PAUSE VIDEO FUNCTION
+    private async Task PauseVideo()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            $"document.getElementById('video-{Item.Codice}').pause();");
+    }
+    // STOP VIDEO FUNCTION
+    private async Task StopVideo()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            $@"
+        var v=document.getElementById('video-{Item.Codice}');
+        v.pause();
+        v.currentTime=0;
+        ");
+    }
+    // STOP VIDEO FUNCTION
+    private async Task FullscreenVideo()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            $"document.getElementById('video-{Item.Codice}').requestFullscreen();");
+
+        IsFullscreen = true;
+    }
+
+    private async Task ExitFullscreen()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            "document.exitFullscreen();");
+
+        IsFullscreen = false;
+    }
+
+
+}

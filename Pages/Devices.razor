@@ -1,0 +1,45 @@
+﻿@page "/Devices"
+
+@using BlazorPWA.Components
+
+<h1 class="page-title">Devices</h1>
+
+<div class="devices-grid">
+
+    @if (isLoading)
+    {        
+    <div class="loading">
+        Caricamento...
+    </div>
+    }
+    @foreach (var item in ListaDevices)
+    {
+        <DeviceCard Item="item" />
+    }
+
+</div>
+
+@code {
+
+    private bool isLoading = true;
+
+    private List<DeviceItem> ListaDevices = new();
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await CaricaDevices();
+    }
+
+    private async Task CaricaDevices()
+    {
+        ListaDevices = new()
+        {
+        new("DEV-001", "Display reception principale", "Android TV", "Online", "2026-01-15", "2026-09-10", "/media/video-002.mp4"),
+        new("DEV-002", "Display Sala attesa", "Android TV", "Online", "2026-01-15", "2026-09-10", "/media/video-003.mp4"),
+        new("DEV-003", "Display Vetrina", "Android TV", "Online", "2026-01-15", "2026-09-10", "/media/video-004.mp4")
+        };        
+    isLoading = false;
+    }
+
+}
