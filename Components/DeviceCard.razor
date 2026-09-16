@@ -209,11 +209,27 @@
         ");
     }
     // STOP VIDEO FUNCTION
-    private async Task FullscreenVideo()
+    private async Task FullscreenVideo_()
     {
         await JS.InvokeVoidAsync(
             "eval",
             $"document.getElementById('video-{Item.Codice}').requestFullscreen();");
+
+        IsFullscreen = true;
+    }
+    // ANCHE PER IOS, USO webkitEnterFullscreen
+    private async Task FullscreenVideo()
+    {
+        await JS.InvokeVoidAsync(
+            "eval",
+            $@"
+        var v=document.getElementById('video-{Item.Codice}');
+
+        if(v.requestFullscreen)
+            v.requestFullscreen();
+        else if(v.webkitEnterFullscreen)
+            v.webkitEnterFullscreen();
+        ");
 
         IsFullscreen = true;
     }
