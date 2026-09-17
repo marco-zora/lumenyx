@@ -145,13 +145,8 @@
 
             try
             {
-                //var response = await Http.GetAsync(WebhookUrl);
-                //var response = await Http.PostAsync(WebhookUrl, new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
-                //var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
                 var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
-
-                //UltimaRisposta = await response.Content.ReadAsStringAsync();
-
+     
                 var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
                 UltimaRisposta = result?["parameter"]?.ToString() ?? "";
             }

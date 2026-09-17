@@ -27,6 +27,8 @@ Welcome to your new app.
 
 @code {
 
+    private string WebhookUrl = "https://nocodb.irib.cnr.it/n8n/webhook/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e";
+
     private string Messaggio = "";
 
     private async Task InviaWebhook()
@@ -40,26 +42,31 @@ Welcome to your new app.
                 action = "test"
             };
 
-            var response = await Http.PostAsJsonAsync(
-                //"https://nocodb.irib.cnr.it/n8n/webhook-test/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e",
-                "https://nocodb.irib.cnr.it/n8n/webhook/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e",
-                payload);
+            //var response = await Http.PostAsJsonAsync(WebhookUrl, payload);            
+            //var response = await SendCommand("comando", "parametro");
+            //var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
 
-            //var result = await response.Content.ReadFromJsonAsync<WebhookResponse>();
-
-            var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-            Messaggio = result?["parameter"]?.ToString() ?? "";
-
-            //var result = await response.Content.ReadAsStringAsync();
-            //Messaggio = result;
-
-            //var testo = await response.Content.ReadAsStringAsync();
-            //Messaggio = $"HTTP {(int)response.StatusCode} - {testo}";
+            var response = await SendCommand("comando", "parametro");
+            Messaggio = response?["parameter"]?.ToString() ?? "";
+            Messaggio = (string)response?["parameter"];
         }
         catch (Exception ex)
         {
             Messaggio = ex.ToString();
         }
+    }
+
+    private async Task <Dictionary<string, object>> SendCommand(string cmd,string param)
+    {
+        var payload = new
+        {
+            cmd = cmd,
+            param = param,
+            ID = "TV001"
+        };
+
+        var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
+        return await response.Content.ReadFromJsonAsync<Dictionary<string, object>>() ?? new Dictionary<string, object>();
     }
 
 }
