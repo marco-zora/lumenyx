@@ -1,0 +1,185 @@
+﻿@page "/test"
+@using System.Diagnostics
+
+<PageTitle>Test Webhook</PageTitle>
+
+<h3>Test Prestazioni Webhook → n8n → NocoDB</h3>
+
+<div style="margin-bottom:20px">
+
+    <div style="margin-bottom:10px">
+        <label>Webhook URL</label>
+        <br />
+        <input @bind="WebhookUrl"
+               style="width:100%;max-width:900px" />
+    </div>
+
+    <div style="margin-bottom:10px">
+        <label>Numero richieste</label>
+        <br />
+        <input type="number"
+               min="1"
+               @bind="NumeroRichieste" />
+    </div>
+
+    <button class="btn btn-primary"
+            @onclick="EseguiTest"
+            disabled="@InEsecuzione">
+        Avvia Test Sequenziale
+    </button>
+
+</div>
+
+@if (InEsecuzione)
+{
+    <p><b>Test in esecuzione...</b></p>
+}
+
+@if (Tempi.Count > 0)
+{
+    <hr />
+
+    <h4>Statistiche</h4>
+
+    <table class="table table-bordered" style="max-width:600px">
+
+        <tr>
+            <td>Richieste</td>
+            <td>@NumeroRichieste</td>
+        </tr>
+
+        <tr>
+            <td>Minimo</td>
+            <td>@TempoMin.ToString("0.00") ms</td>
+        </tr>
+
+        <tr>
+            <td>Massimo</td>
+            <td>@TempoMax.ToString("0.00") ms</td>
+        </tr>
+
+        <tr>
+            <td>Medio</td>
+            <td>@TempoMedio.ToString("0.00") ms</td>
+        </tr>
+
+        <tr>
+            <td>Richieste/sec</td>
+            <td>@ReqSec.ToString("0.00")</td>
+        </tr>
+
+    </table>
+
+    <!-- <h4>Ultima risposta</h4> -->
+    <!-- <textarea style="width:100%;height:180px">@UltimaRisposta</textarea> -->
+
+    <h4>Log tempi</h4>
+
+    <div style="
+        height:300px;
+        overflow:auto;
+        border:1px solid silver;
+        padding:10px;
+        font-family:Consolas">
+
+        @for (int i = 0; i < Tempi.Count; i++)
+        {
+            <div>
+                Richiesta @(i + 1)
+                :
+                @Tempi[i] ms
+            </div>
+        }
+
+    </div>
+}
+
+@code
+{
+    private string WebhookUrl =
+        "https://nocodb.irib.cnr.it/n8n/webhook/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e";
+
+    private int NumeroRichieste = 100;
+
+    private bool InEsecuzione;
+
+    private string UltimaRisposta = "";
+
+    private readonly List<string> Tempi = new();
+
+    private double TempoMin;
+    private double TempoMax;
+    private double TempoMedio;
+    private double ReqSec;
+
+    private readonly HttpClient Http = new();
+
+    private async Task EseguiTest()
+    {
+        InEsecuzione = true;
+
+        Tempi.Clear();
+
+        UltimaRisposta = "";
+
+        TempoMin = 1000;
+        TempoMax = 0;
+        TempoMedio = 0;
+        ReqSec = 0;
+
+        StateHasChanged();
+
+        var payload = new
+        {
+            source = "pwa",
+            deviceId = "TV123",
+            action = "test"
+        };
+        
+        Stopwatch sw = new();
+        var swTotale = Stopwatch.StartNew();
+
+        for (int i = 0; i < NumeroRichieste; i++)
+        {
+            sw = Stopwatch.StartNew();
+
+            try
+            {
+                //var response = await Http.GetAsync(WebhookUrl);
+                //var response = await Http.PostAsync(WebhookUrl, new StringContent(System.Text.Json.JsonSerializer.Serialize(payload), System.Text.Encoding.UTF8, "application/json"));
+                //var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
+                var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
+
+                //UltimaRisposta = await response.Content.ReadAsStringAsync();
+
+                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+                UltimaRisposta = result?["parameter"]?.ToString() ?? "";
+            }
+            catch (Exception ex)
+            {
+                UltimaRisposta = $"ERRORE: {ex.Message}";
+            }
+
+            sw.Stop();
+
+            Tempi.Add( (sw.Elapsed.TotalMilliseconds).ToString("0.00") + " - " + UltimaRisposta);
+
+            StateHasChanged();
+
+            TempoMin = sw.Elapsed.TotalMilliseconds < TempoMin ? sw.Elapsed.TotalMilliseconds : TempoMin;
+            TempoMax = sw.Elapsed.TotalMilliseconds > TempoMax ? sw.Elapsed.TotalMilliseconds : TempoMax;
+
+        }
+
+        swTotale.Stop();
+
+        TempoMedio = swTotale.Elapsed.TotalMilliseconds / NumeroRichieste;
+
+        ReqSec = NumeroRichieste / swTotale.Elapsed.TotalSeconds;
+
+        InEsecuzione = false;
+
+        StateHasChanged();
+    }
+}
+`
