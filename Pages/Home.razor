@@ -48,7 +48,7 @@ Welcome to your new app.
 
             var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
             
-            Messaggio = result?["message"]?.ToString();
+            Messaggio = result?["parameter"]?.ToString() ?? "";
 
             //var testo = await response.Content.ReadAsStringAsync();
             //Messaggio = $"HTTP {(int)response.StatusCode} - {testo}";
