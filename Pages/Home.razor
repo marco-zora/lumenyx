@@ -46,9 +46,12 @@ Welcome to your new app.
 
             //var result = await response.Content.ReadFromJsonAsync<WebhookResponse>();
 
-            var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-            
-            Messaggio = result?["parameter"]?.ToString() ?? "";
+            //var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
+
+            //Messaggio = result?["parameter"]?.ToString() ?? "";
+
+            var result = await response.Content.ReadAsStringAsync();
+            Messaggio = result;
 
             //var testo = await response.Content.ReadAsStringAsync();
             //Messaggio = $"HTTP {(int)response.StatusCode} - {testo}";
