@@ -35,20 +35,13 @@ Welcome to your new app.
     {
         try
         {
-            var payload = new
-            {
-                source = "pwa",
-                deviceId = "TV123",
-                action = "test"
-            };
-
             //var response = await Http.PostAsJsonAsync(WebhookUrl, payload);            
             //var response = await SendCommand("comando", "parametro");
             //var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
 
             var response = await SendCommand("comando", "parametro");
-            Messaggio = response?["parameter"]?.ToString() ?? "";
-            Messaggio = (string)response?["parameter"];
+
+            Messaggio = response["parameter"]?.ToString() ?? "";
         }
         catch (Exception ex)
         {
