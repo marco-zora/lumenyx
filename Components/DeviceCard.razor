@@ -1,4 +1,7 @@
 ﻿@inject IJSRuntime JS
+@inject NavigationManager Nav
+
+@inject IJSRuntime JS
 
 <div class="device-card">
 
@@ -16,15 +19,32 @@
 
         </div>
 
+
         <div class="status-badge @GetStatusClass()">
             @Item.Stato
         </div>
+
+    
+
+        <button type="button"
+                class="action-button"
+                title="Edit"
+                @onclick="ApriProgramma">
+
+            <svg viewBox="0 0 24 24">
+                <path fill="currentColor"
+                      d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25zm17.71-10.04a1.003 1.003 0 0 0 0-1.42l-2.5-2.5a1.003 1.003 0 0 0-1.42 0l-1.96 1.96 3.75 3.75 2.1-1.79z" />
+            </svg>
+
+        </button>
+
+
 
     </div>
 
     <div class="video-preview">
 
-        <video id="video-@Item.Codice" 
+        <video id="video-@Item.Codice"
                autoplay
                muted
                loop
@@ -32,12 +52,15 @@
                preload="metadata">
 
             <source src="@Item.VideoUrl"
-                    type="video/mp4" />          
+                    type="video/mp4" />
+
         </video>
 
     </div>
 
-    <div class="video-url">   @Item.VideoUrl    </div>
+    <div class="video-url">
+        @Item.VideoUrl
+    </div>
 
     <div class="device-description">
         @Item.Descrizione
@@ -78,7 +101,6 @@
                 class="action-button"
                 title="Play"
                 @onclick="PlayVideo">
-            
 
             <svg viewBox="0 0 24 24">
                 <path fill="currentColor"
@@ -128,8 +150,7 @@
 
         </button>
 
-        <!-- FULL SCREEN / EXIT FULL SCREEN -->
-
+        <!-- FULLSCREEN -->
         @if (!IsFullscreen)
         {
             <button type="button"
@@ -161,9 +182,8 @@
 
     </div>
 
-    
-
 </div>
+
 
 @code
 {
@@ -181,6 +201,14 @@
             "manutenzione" => "status-maintenance",
             _ => "status-default"
         };
+    }
+
+    // OPEN PROGRAM PAGE FUNCTION
+    private void ApriProgramma()
+    {
+        string DeviceId = Uri.EscapeDataString(Item.Codice);
+
+        Nav.NavigateTo($"./program/{DeviceId}");
     }
 
     // PLAY VIDEO FUNCTION

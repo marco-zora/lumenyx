@@ -1,0 +1,151 @@
+﻿@page "/program/{DeviceId}"
+
+<h3 class="page-title">
+    Programma Device @DeviceId
+</h3>
+
+<div class="program-layout">
+
+    <!-- PREVIEW -->
+
+    <div class="preview-panel">
+
+        <div class="preview-frame">
+
+            <div class="preview-header">
+                Preview
+            </div>
+
+            <div class="preview-content">
+
+                @if (SelectedStep != null)
+                {
+                    <div class="preview-command">
+                        @SelectedStep.Comando
+                    </div>
+
+                    <div class="preview-parameter">
+                        @SelectedStep.Parametro
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ISTRUZIONI -->
+
+    <div class="steps-panel">
+
+        @foreach (var step in ListaStep)
+        {
+            <div class="step-card @(SelectedStep == step ? "selected" : "")"
+                 @onclick="() => SelectedStep = step">
+
+                <div class="step-top">
+
+                    <div class="step-number">
+                        #@step.Riga
+                    </div>
+
+                    <div class="step-command">
+                        @step.Comando
+                    </div>
+
+                </div>
+
+                <div class="step-parameter">
+                    @step.Parametro
+                </div>
+
+            </div>
+
+            <div class="step-arrow">
+                ▼
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public string DeviceId { get; set; } = "";
+
+    public class ProgramStep
+    {
+        public int Riga { get; set; }
+        public string Comando { get; set; } = "";
+        public string Parametro { get; set; } = "";
+    }
+
+    private List<ProgramStep> ListaStep = new();
+
+    private ProgramStep? SelectedStep;
+
+    protected override void OnInitialized()
+    {
+        ListaStep = new()
+        {
+            new()
+            {
+                Riga = 1,
+                Comando = "HELLO_MESSAGE",
+                Parametro = "Benvenuto in Lumenyx"
+            },
+
+            new()
+            {
+                Riga = 2,
+                Comando = "PLAY",
+                Parametro = "VIDEO-001.mp4"
+            },
+
+            new()
+            {
+                Riga = 3,
+                Comando = "PLAY",
+                Parametro = "VIDEO-002.mp4"
+            },
+
+            new()
+            {
+                Riga = 4,
+                Comando = "WEB",
+                Parametro = "PROMO_SETTEMBRE.HTML"
+            },
+
+            new()
+            {
+                Riga = 5,
+                Comando = "OVERLAY",
+                Parametro = "LOGO_AZIENDA"
+            },
+             new()
+            {
+                Riga = 6,
+                Comando = "OVERLAY",
+                Parametro = "LOGO_AZIENDA"
+            }, 
+            new()
+            {
+                Riga = 7,
+                Comando = "OVERLAY",
+                Parametro = "LOGO_AZIENDA"
+            },
+             new()
+            {
+                Riga = 8,
+                Comando = "OVERLAY",
+                Parametro = "LOGO_AZIENDA"
+            }
+
+        };
+
+        SelectedStep = ListaStep.First();
+    }
+}

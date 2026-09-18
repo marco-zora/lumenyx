@@ -37,8 +37,7 @@ jobs:
           TIMESTAMP=$(date +'%Y-%m-%d_%H:%M:%S')
           echo "Nuovo timestamp Blazor PWA: $TIMESTAMP"
           
-          # Applica la data in cima al file del service worker generato nella cartella di pubblicazione
-          # Nota: Se il tuo file si chiama 'service-worker.published.js', sostituisci il nome qui sotto.
+          # Applica la data in cima al file del service worker generato nella cartella di pubblicazione          
           sed -i "1i // Versione Build Automatica: $TIMESTAMP" ./bin/Release/net10.0/publish/wwwroot/service-worker.js
 # -----------------------------
 

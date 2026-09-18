@@ -4,19 +4,33 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>BlazorPWA</title>
+    <title>LUMENYX</title>
     -
     <!--  <base href="/lumenyx/" />  -->
     <!-- <base href="/" /> -->
 
     <script>
 
+        // corregge la base href per il deploy su github pages
         var base = document.createElement('base');
-
         base.href = location.hostname === 'localhost' ? '/' : '/lumenyx/';
-
         document.head.prepend(base);
 
+        // Funzione per ottenere la versione del service worker
+        window.GetSWVersion = async function () {
+
+        const reg = await navigator.serviceWorker.getRegistration();
+
+        return new Promise(resolve => {
+
+            navigator.serviceWorker.addEventListener(
+                'message',
+                e => resolve(e.data),
+                { once: true });
+            
+            reg.waiting ? "waiting:" + reg.waiting.postMessage("GET_VERSION") : reg.active.postMessage('GET_VERSION');;
+        });
+    }
     </script>
 
 
@@ -53,7 +67,6 @@
 
 
             <script>navigator.serviceWorker.register('service-worker.js', { updateViaCache: 'none' });</script>
-
 
         </body>
 

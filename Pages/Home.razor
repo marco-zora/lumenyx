@@ -1,7 +1,8 @@
 ﻿@inject HttpClient Http
-
+@inject IJSRuntime JS
 
 @page "/"
+
 
 <PageTitle>Home</PageTitle>
 
@@ -30,6 +31,8 @@ Welcome to your new app.
     private string WebhookUrl = "https://nocodb.irib.cnr.it/n8n/webhook/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e";
 
     private string Messaggio = "";
+
+    private string ServiceWorkerVersion = "?";
 
     private async Task InviaWebhook()
     {
@@ -61,6 +64,26 @@ Welcome to your new app.
         var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
         return await response.Content.ReadFromJsonAsync<Dictionary<string, object>>() ?? new Dictionary<string, object>();
     }
+    
+    public class SWInfo
+    {
+    public string? Active { get; set; }
+    public string? Waiting { get; set; }
+    public string? Script { get; set; }
+    }
+/*       
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+//        var result = await JS.InvokeAsync<SWInfo>("GetCurrentSWInfo");
+        string result = await JS.InvokeAsync<string>("GetSWVersion");
+
+        ServiceWorkerVersion = result;
+
+        StateHasChanged();
+    }
+*/
 
 }
 
