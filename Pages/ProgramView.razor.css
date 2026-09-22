@@ -1,14 +1,14 @@
 .page-title {
-    margin-bottom: 20px;
-    font-size: 1.6rem;
+    margin-bottom: 1.25rem;
+    font-size: clamp(1.45rem, 1.1vw, 1.6rem);
     font-weight: 700;
 }
 
 .program-layout {
     display: flex;
-    gap: 20px;
+    gap: clamp(0.9rem, 1vw, 1.25rem);
     align-items: stretch;
-    height: calc(100vh - 180px);
+    height: calc(100vh - 11rem);
     overflow: hidden;
 }
 
@@ -17,27 +17,30 @@
 /* -------------------------------- */
 
 .preview-panel {
-    width: 42%;
-    flex: 0 0 42%;
+    flex: 0 0 34rem;
+    width: 34rem;
+    min-width: 34rem;
+    max-width: 34rem;
 }
 
 /* TV 16:9 */
 
 .preview-frame {
+    width: 100%;
     aspect-ratio: 16 / 9;
     background: #000;
-    border-radius: 14px;
+    border-radius: clamp( 0.75rem, 0.8vw, 0.9rem );
     overflow: hidden;
     display: flex;
     flex-direction: column;
-    border: 1px solid #222;
-    box-shadow: 0 6px 18px rgba(0,0,0,.15);
+    border: 0.0625rem solid #222;
+    box-shadow: 0 0.375rem 1.125rem rgba(0, 0, 0, .15);
 }
 
 .preview-header {
     background: #111827;
     color: white;
-    padding: 12px 16px;
+    padding: clamp(0.65rem, 0.8vw, 0.75rem) clamp(0.9rem, 1vw, 1rem);
     font-weight: 600;
 }
 
@@ -47,20 +50,20 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding: 20px;
+    padding: clamp( 1rem, 1.3vw, 1.25rem);
     text-align: center;
     color: white;
 }
 
 .preview-command {
-    font-size: 2rem;
+    font-size: clamp( 1.5rem, 1.8vw, 2rem);
     font-weight: 700;
 }
 
 .preview-parameter {
-    margin-top: 12px;
+    margin-top: 0.75rem;
     color: #cbd5e1;
-    font-size: 1rem;
+    font-size: clamp( 0.95rem, 0.95vw, 1rem);
     word-break: break-word;
 }
 
@@ -69,49 +72,48 @@
 /* -------------------------------- */
 
 .steps-panel {
-    width: 58%;
-    flex: 0 0 58%;
-    height: 700px;
+    flex: 1 1 auto;
+    min-width: 0;
+    height: 100%;
     overflow-y: auto;
     overflow-x: hidden;
-    padding-right: 10px;
+    padding-right: 0.625rem;
 }
 
     .steps-panel::-webkit-scrollbar {
-        width: 10px;
+        width: 0.625rem;
     }
 
     .steps-panel::-webkit-scrollbar-track {
         background: #f1f5f9;
-        border-radius: 10px;
+        border-radius: 0.625rem;
     }
 
     .steps-panel::-webkit-scrollbar-thumb {
         background: #cbd5e1;
-        border-radius: 10px;
+        border-radius: 0.625rem;
     }
 
         .steps-panel::-webkit-scrollbar-thumb:hover {
             background: #94a3b8;
         }
 
-
 .step-card {
     background: white;
-    border: 1px solid #e5e7eb;
-    border-radius: 12px;
-    padding: 18px;
+    border: 0.0625rem solid #e5e7eb;
+    border-radius: 0.75rem;
+    padding: 1.125rem;
     cursor: pointer;
     transition: transform .15s ease, box-shadow .15s ease, background-color .15s ease;
 }
 
     .step-card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 8px 18px rgba(0,0,0,.08);
+        transform: translateY(-0.125rem);
+        box-shadow: 0 0.5rem 1.125rem rgba(0, 0, 0, .08);
     }
 
 .selected {
-    border-left: 5px solid #2563eb;
+    border-left: 0.3125rem solid #2563eb;
     background: #eff6ff;
 }
 
@@ -123,19 +125,19 @@
 
 .step-number {
     font-weight: bold;
-    font-size: 0.95rem;
+    font-size: clamp( 0.92rem, 0.95vw, 1rem);
 }
 
 .step-command {
     color: #2563eb;
     font-weight: 700;
-    font-size: 1rem;
+    font-size: clamp( 0.95rem, 1vw, 1.05rem);
 }
 
 .step-parameter {
-    margin-top: 10px;
+    margin-top: 0.625rem;
     color: #6b7280;
-    font-size: 0.95rem;
+    font-size: clamp( 0.92rem, 0.95vw, 1rem);
     word-break: break-word;
     overflow-wrap: anywhere;
 }
@@ -143,27 +145,34 @@
 .step-arrow {
     text-align: center;
     color: #9ca3af;
-    font-size: 1.2rem;
-    margin: 6px 0;
+    font-size: clamp( 1rem, 1.1vw, 1.2rem);
+    margin: 0.375rem 0;
 }
 
 /* -------------------------------- */
 /* RESPONSIVE */
 /* -------------------------------- */
 
-@media (max-width: 1200px) {
+@media (max-width: 75rem) {
 
     .program-layout {
         flex-direction: column;
+        overflow: auto;
     }
 
-    .preview-panel,
+    .preview-panel {
+        width: 100%;
+        min-width: unset;
+        max-width: unset;
+        flex: 0 0 auto;
+    }
+
     .steps-panel {
         width: 100%;
-        flex: 0 0 100%;
+        flex: 1 1 auto;
     }
 
     .preview-frame {
-        min-height: 450px;
+        min-height: 28rem;
     }
 }

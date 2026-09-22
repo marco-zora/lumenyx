@@ -1,180 +1,1371 @@
 ﻿@page "/test"
 @using System.Diagnostics
+@using System.Net.Http.Json
+@using System.Text.Json
+@using System.Text.Json.Serialization
+@using Microsoft.JSInterop
+@implements IAsyncDisposable
+@inject IJSRuntime JS
 
-<PageTitle>Test Webhook</PageTitle>
+<PageTitle>Test Lumenyx</PageTitle>
 
-<h3>Test Prestazioni Webhook → n8n → NocoDB</h3>
+<div class="test-page">
 
-<div style="margin-bottom:20px">
+    <header class="page-header">
 
-    <div style="margin-bottom:10px">
-        <label>Webhook URL</label>
-        <br />
-        <input @bind="WebhookUrl"
-               style="width:100%;max-width:900px" />
-    </div>
+        <div>
+            <h1>Test Lumenyx</h1>
 
-    <div style="margin-bottom:10px">
-        <label>Numero richieste</label>
-        <br />
-        <input type="number"
-               min="1"
-               @bind="NumeroRichieste" />
-    </div>
+            <p>
+                Diagnostica del dispositivo e test prestazioni
+                Webhook → n8n → NocoDB
+            </p>
+        </div>
 
-    <button class="btn btn-primary"
-            @onclick="EseguiTest"
-            disabled="@InEsecuzione">
-        Avvia Test Sequenziale
-    </button>
+        <button class="btn-refresh"
+                @onclick="CaricaDiagnosticaDispositivo"
+                disabled="@CaricamentoDiagnostica">
 
-</div>
+            @(CaricamentoDiagnostica
+                ? "Analisi in corso..."
+                : "Aggiorna diagnostica")
 
-@if (InEsecuzione)
-{
-    <p><b>Test in esecuzione...</b></p>
-}
+        </button>
 
-@if (Tempi.Count > 0)
-{
-    <hr />
+    </header>
 
-    <h4>Statistiche</h4>
+    <section class="panel">
 
-    <table class="table table-bordered" style="max-width:600px">
+        <div class="panel-title">
 
-        <tr>
-            <td>Richieste</td>
-            <td>@NumeroRichieste</td>
-        </tr>
-
-        <tr>
-            <td>Minimo</td>
-            <td>@TempoMin.ToString("0.00") ms</td>
-        </tr>
-
-        <tr>
-            <td>Massimo</td>
-            <td>@TempoMax.ToString("0.00") ms</td>
-        </tr>
-
-        <tr>
-            <td>Medio</td>
-            <td>@TempoMedio.ToString("0.00") ms</td>
-        </tr>
-
-        <tr>
-            <td>Richieste/sec</td>
-            <td>@ReqSec.ToString("0.00")</td>
-        </tr>
-
-    </table>
-
-    <!-- <h4>Ultima risposta</h4> -->
-    <!-- <textarea style="width:100%;height:180px">@UltimaRisposta</textarea> -->
-
-    <h4>Log tempi</h4>
-
-    <div style="
-        height:300px;
-        overflow:auto;
-        border:1px solid silver;
-        padding:10px;
-        font-family:Consolas">
-
-        @for (int i = 0; i < Tempi.Count; i++)
-        {
             <div>
-                Richiesta @(i + 1)
-                :
-                @Tempi[i] ms
+                <h2>Caratteristiche del dispositivo</h2>
+
+                <p>
+                    Informazioni rilevate direttamente dal browser.
+                </p>
+            </div>
+
+            @if (Diagnostica is not null)
+            {
+                <span class="status-badge status-ok">
+                    Rilevamento completato
+                </span>
+            }
+
+        </div>
+
+        @if (CaricamentoDiagnostica)
+        {
+            <div class="loading-box">
+                Lettura delle caratteristiche del dispositivo...
+            </div>
+        }
+        else if (!string.IsNullOrWhiteSpace(ErroreDiagnostica))
+        {
+            <div class="alert alert-error">
+                <strong>Errore diagnostica:</strong>
+                @ErroreDiagnostica
+            </div>
+        }
+        else if (Diagnostica is not null)
+        {
+            <div class="diagnostic-grid">
+
+                <article class="diagnostic-card">
+
+                    <h3>Display</h3>
+
+                    <dl>
+                        <div>
+                            <dt>Schermo logico</dt>
+                            <dd>
+                                @Diagnostica.Display.ScreenWidth ×
+                                @Diagnostica.Display.ScreenHeight CSS px
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Area disponibile</dt>
+                            <dd>
+                                @Diagnostica.Display.AvailableWidth ×
+                                @Diagnostica.Display.AvailableHeight CSS px
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Viewport</dt>
+                            <dd>
+                                @Diagnostica.Display.ViewportWidth ×
+                                @Diagnostica.Display.ViewportHeight CSS px
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Visual viewport</dt>
+                            <dd>
+                                @Diagnostica.Display.VisualViewportWidth ×
+                                @Diagnostica.Display.VisualViewportHeight CSS px
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Risoluzione fisica stimata</dt>
+                            <dd>
+                                @Diagnostica.Display.EstimatedPhysicalWidth ×
+                                @Diagnostica.Display.EstimatedPhysicalHeight px
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Device Pixel Ratio</dt>
+                            <dd>@Diagnostica.Display.DevicePixelRatio</dd>
+                        </div>
+
+                        <div>
+                            <dt>Scala visual viewport</dt>
+                            <dd>@Diagnostica.Display.VisualViewportScale</dd>
+                        </div>
+
+                        <div>
+                            <dt>Profondità colore</dt>
+                            <dd>@Diagnostica.Display.ColorDepth bit</dd>
+                        </div>
+
+                        <div>
+                            <dt>Orientamento</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Display.Orientation)
+                            </dd>
+                        </div>
+                    </dl>
+
+                </article>
+
+                <article class="diagnostic-card">
+
+                    <h3>Browser e sistema</h3>
+
+                    <dl>
+                        <div>
+                            <dt>Piattaforma</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.System.Platform)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Lingua</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.System.Language)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Lingue configurate</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.System.Languages)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Core logici</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.System.HardwareConcurrency)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Memoria dichiarata</dt>
+                            <dd>
+                                @if (Diagnostica.System.DeviceMemoryGb is not null)
+                                {
+                                    <span>
+                                        @Diagnostica.System.DeviceMemoryGb GB
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Non esposta dal browser</span>
+                                }
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Touch point</dt>
+                            <dd>@Diagnostica.System.MaxTouchPoints</dd>
+                        </div>
+
+                        <div>
+                            <dt>Cookie abilitati</dt>
+                            <dd>
+                                @SiNo(Diagnostica.System.CookieEnabled)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Online</dt>
+                            <dd>@SiNo(Diagnostica.System.Online)</dd>
+                        </div>
+
+                        <div>
+                            <dt>Modalità PWA/standalone</dt>
+                            <dd>@SiNo(Diagnostica.System.Standalone)</dd>
+                        </div>
+
+                        <div class="full-row">
+                            <dt>User Agent</dt>
+
+                            <dd class="break-text">
+                                @ValoreOPlaceholder(
+                                    Diagnostica.System.UserAgent)
+                            </dd>
+                        </div>
+                    </dl>
+
+                </article>
+
+                <article class="diagnostic-card">
+
+                    <h3>Storage e IndexedDB</h3>
+
+                    <dl>
+                        <div>
+                            <dt>IndexedDB disponibile</dt>
+                            <dd>
+                                @SiNo(
+                                    Diagnostica.Storage.IndexedDbSupported)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Test IndexedDB</dt>
+
+                            <dd>
+                                @if (Diagnostica.Storage.IndexedDbTestSucceeded)
+                                {
+                                    <span class="text-success">
+                                        Scrittura, lettura e cancellazione riuscite
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="text-error">
+                                        Test non riuscito
+                                    </span>
+                                }
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Quota totale origine</dt>
+                            <dd>
+                                @FormatBytes(
+                                    Diagnostica.Storage.QuotaBytes)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Spazio utilizzato</dt>
+                            <dd>
+                                @FormatBytes(
+                                    Diagnostica.Storage.UsageBytes)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Spazio disponibile stimato</dt>
+                            <dd>
+                                @FormatBytes(
+                                    Diagnostica.Storage.AvailableBytes)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Utilizzo quota</dt>
+                            <dd>
+                                @FormatPercentuale(
+                                    Diagnostica.Storage.UsagePercentage)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Storage persistente</dt>
+
+                            <dd>
+                                @if (Diagnostica.Storage.Persistent is null)
+                                {
+                                    <span>Informazione non disponibile</span>
+                                }
+                                else
+                                {
+                                    <span>
+                                        @SiNo(
+                                            Diagnostica.Storage.Persistent.Value)
+                                    </span>
+                                }
+                            </dd>
+                        </div>
+
+                        <div class="full-row">
+                            <dt>Esito test</dt>
+
+                            <dd class="break-text">
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Storage.IndexedDbMessage)
+                            </dd>
+                        </div>
+                    </dl>
+
+                    @if (Diagnostica.Storage.QuotaBytes > 0)
+                    {
+                        <div class="storage-bar"
+                             role="progressbar"
+                             aria-label="Utilizzo spazio browser"
+                             aria-valuemin="0"
+                             aria-valuemax="100"
+                             aria-valuenow="@Diagnostica.Storage.UsagePercentage">
+
+                            <div class="storage-bar-value"
+                                 style="@GetStorageBarStyle()">
+                            </div>
+
+                        </div>
+                    }
+
+                    <p class="diagnostic-note">
+                        La quota indicata è quella stimata dal browser per
+                        l'intera origine Lumenyx e può comprendere IndexedDB,
+                        Cache Storage e altri dati locali.
+                    </p>
+
+                </article>
+
+                <article class="diagnostic-card">
+
+                    <h3>Connessione</h3>
+
+                    <dl>
+                        <div>
+                            <dt>API connessione disponibile</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Connection.Supported)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Tipo connessione</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Connection.Type)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Tipo effettivo</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Connection.EffectiveType)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Velocità stimata</dt>
+
+                            <dd>
+                                @if (Diagnostica.Connection.DownlinkMbps is not null)
+                                {
+                                    <span>
+                                        @Diagnostica.Connection.DownlinkMbps Mbps
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Non disponibile</span>
+                                }
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Latenza RTT stimata</dt>
+
+                            <dd>
+                                @if (Diagnostica.Connection.RttMs is not null)
+                                {
+                                    <span>
+                                        @Diagnostica.Connection.RttMs ms
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Non disponibile</span>
+                                }
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Risparmio dati</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Connection.SaveData)
+                            </dd>
+                        </div>
+                    </dl>
+
+                </article>
+
+                <article class="diagnostic-card">
+
+                    <h3>Grafica WebGL</h3>
+
+                    <dl>
+                        <div>
+                            <dt>WebGL disponibile</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Graphics.WebGlSupported)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Versione</dt>
+                            <dd>
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Graphics.Version)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Vendor</dt>
+                            <dd class="break-text">
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Graphics.Vendor)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Renderer GPU</dt>
+                            <dd class="break-text">
+                                @ValoreOPlaceholder(
+                                    Diagnostica.Graphics.Renderer)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Texture massima</dt>
+
+                            <dd>
+                                @if (Diagnostica.Graphics.MaxTextureSize > 0)
+                                {
+                                    <span>
+                                        @Diagnostica.Graphics.MaxTextureSize ×
+                                        @Diagnostica.Graphics.MaxTextureSize px
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span>Non disponibile</span>
+                                }
+                            </dd>
+                        </div>
+                    </dl>
+
+                </article>
+
+                <article class="diagnostic-card">
+
+                    <h3>Funzionalità browser</h3>
+
+                    <dl>
+                        <div>
+                            <dt>Service Worker</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.ServiceWorker)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Cache Storage</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.CacheStorage)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>WebSocket</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.WebSocket)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Web Push</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.PushManager)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Notifiche</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.Notifications)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Fullscreen</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.Fullscreen)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Picture-in-Picture</dt>
+                            <dd>
+                                @SiNo(
+                                    Diagnostica.Features.PictureInPicture)
+                            </dd>
+                        </div>
+
+                        <div>
+                            <dt>Web Share</dt>
+                            <dd>
+                                @SiNo(Diagnostica.Features.WebShare)
+                            </dd>
+                        </div>
+                    </dl>
+
+                </article>
+
             </div>
         }
 
-    </div>
-}
+    </section>
 
-@code
-{
+    <section class="panel">
+
+        <div class="panel-title">
+
+            <div>
+                <h2>Test prestazioni webhook</h2>
+
+                <p>
+                    Invio sequenziale delle richieste verso n8n e NocoDB.
+                </p>
+            </div>
+
+            @if (InEsecuzione)
+            {
+                <span class="status-badge status-running">
+                    Test in esecuzione
+                </span>
+            }
+
+        </div>
+
+        <div class="form-grid">
+
+            <div class="field field-large">
+
+                <label for="webhook-url">
+                    Webhook URL
+                </label>
+
+                <input id="webhook-url"
+                       type="url"
+                       @bind="WebhookUrl"
+                       disabled="@InEsecuzione" />
+
+            </div>
+
+            <div class="field">
+
+                <label for="numero-richieste">
+                    Numero richieste
+                </label>
+
+                <input id="numero-richieste"
+                       type="number"
+                       min="1"
+                       max="10000"
+                       @bind="NumeroRichieste"
+                       disabled="@InEsecuzione" />
+
+            </div>
+
+            <div class="field field-button">
+
+                <button class="btn-start"
+                        @onclick="EseguiTest"
+                        disabled="@InEsecuzione">
+
+                    @(InEsecuzione
+                        ? $"Richiesta {RichiestaCorrente} di {NumeroRichieste}"
+                        : "Avvia test sequenziale")
+
+                </button>
+
+            </div>
+
+        </div>
+
+        @if (InEsecuzione)
+        {
+            <div class="test-progress">
+
+                <div class="test-progress-value"
+                     style="@GetTestProgressStyle()">
+                </div>
+
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(ErroreTest))
+        {
+            <div class="alert alert-error">
+                <strong>Errore:</strong>
+                @ErroreTest
+            </div>
+        }
+
+        @if (Risultati.Count > 0)
+        {
+            <div class="statistics-grid">
+
+                <article class="stat-card">
+                    <span>Completate</span>
+                    <strong>
+                        @Risultati.Count / @NumeroRichieste
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Riuscite</span>
+                    <strong class="text-success">
+                        @RichiesteRiuscite
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Errori</span>
+                    <strong class="text-error">
+                        @RichiesteFallite
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Minimo</span>
+                    <strong>
+                        @TempoMin.ToString("0.00") ms
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Massimo</span>
+                    <strong>
+                        @TempoMax.ToString("0.00") ms
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Medio</span>
+                    <strong>
+                        @TempoMedio.ToString("0.00") ms
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Richieste/sec</span>
+                    <strong>
+                        @ReqSec.ToString("0.00")
+                    </strong>
+                </article>
+
+                <article class="stat-card">
+                    <span>Tempo totale</span>
+                    <strong>
+                        @TempoTotale.ToString("0.00") ms
+                    </strong>
+                </article>
+
+            </div>
+
+            <div class="log-header">
+
+                <h3>Log richieste</h3>
+
+                <button class="btn-secondary"
+                        @onclick="PulisciRisultati"
+                        disabled="@InEsecuzione">
+                    Pulisci log
+                </button>
+
+            </div>
+
+            <div class="log-container">
+
+                @foreach (var risultato in Risultati)
+                {
+                    <div class="log-row">
+
+                        <span class="log-number">
+                            #@risultato.Numero
+                        </span>
+
+                        <span class="log-time">
+                            @risultato.TempoMs.ToString("0.00") ms
+                        </span>
+
+                        <span class="@GetLogStatusClass(risultato)">
+                            @(risultato.Successo
+                                ? $"HTTP {risultato.StatusCode}"
+                                : "ERRORE")
+                        </span>
+
+                        <span class="log-message">
+                            @risultato.Messaggio
+                        </span>
+
+                    </div>
+                }
+
+            </div>
+        }
+
+    </section>
+
+</div>
+
+@code {
+    private const string ModuloDiagnostica =
+        "./js/deviceDiagnostics.js";
+
+    private IJSObjectReference? moduloJs;
+
     private string WebhookUrl =
         "https://nocodb.irib.cnr.it/n8n/webhook/df646fe7-47a9-462c-8ae6-aaa8f3acbc6e";
 
     private int NumeroRichieste = 100;
+    private int RichiestaCorrente;
 
     private bool InEsecuzione;
+    private bool CaricamentoDiagnostica;
 
-    private string UltimaRisposta = "";
+    private string UltimaRisposta = string.Empty;
+    private string ErroreTest = string.Empty;
+    private string ErroreDiagnostica = string.Empty;
 
-    private readonly List<string> Tempi = new();
+    private readonly List<RisultatoRichiesta> Risultati = new();
 
     private double TempoMin;
     private double TempoMax;
     private double TempoMedio;
+    private double TempoTotale;
     private double ReqSec;
+
+    private int RichiesteRiuscite;
+    private int RichiesteFallite;
+
+    private DeviceDiagnostics? Diagnostica;
 
     private readonly HttpClient Http = new();
 
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        await CaricaDiagnosticaDispositivo();
+    }
+
+    private async Task CaricaDiagnosticaDispositivo()
+    {
+        if (CaricamentoDiagnostica)
+            return;
+
+        CaricamentoDiagnostica = true;
+        ErroreDiagnostica = string.Empty;
+
+        try
+        {
+            moduloJs ??= await JS.InvokeAsync<IJSObjectReference>(
+                "import",
+                ModuloDiagnostica);
+
+            Diagnostica =
+                await moduloJs.InvokeAsync<DeviceDiagnostics>(
+                    "getDeviceDiagnostics");
+        }
+        catch (Exception ex)
+        {
+            ErroreDiagnostica = ex.Message;
+        }
+        finally
+        {
+            CaricamentoDiagnostica = false;
+            await InvokeAsync(StateHasChanged);
+        }
+    }
+
     private async Task EseguiTest()
     {
+        if (InEsecuzione)
+            return;
+
+        ErroreTest = string.Empty;
+
+        if (string.IsNullOrWhiteSpace(WebhookUrl))
+        {
+            ErroreTest = "Inserire l'URL del webhook.";
+            return;
+        }
+
+        if (!Uri.TryCreate(
+                WebhookUrl,
+                UriKind.Absolute,
+                out var webhookUri))
+        {
+            ErroreTest = "L'URL del webhook non è valido.";
+            return;
+        }
+
+        if (NumeroRichieste < 1)
+            NumeroRichieste = 1;
+
         InEsecuzione = true;
+        RichiestaCorrente = 0;
 
-        Tempi.Clear();
+        Risultati.Clear();
 
-        UltimaRisposta = "";
+        UltimaRisposta = string.Empty;
 
-        TempoMin = 1000;
+        TempoMin = 0;
         TempoMax = 0;
         TempoMedio = 0;
+        TempoTotale = 0;
         ReqSec = 0;
 
-        StateHasChanged();
+        RichiesteRiuscite = 0;
+        RichiesteFallite = 0;
+
+        await InvokeAsync(StateHasChanged);
 
         var payload = new
         {
             source = "pwa",
             deviceId = "TV123",
-            action = "test"
+            action = "test",
+            timestampUtc = DateTime.UtcNow,
+
+            display = Diagnostica is null
+                ? null
+                : new
+                {
+                    width =
+                        Diagnostica.Display.ScreenWidth,
+
+                    height =
+                        Diagnostica.Display.ScreenHeight,
+
+                    viewportWidth =
+                        Diagnostica.Display.ViewportWidth,
+
+                    viewportHeight =
+                        Diagnostica.Display.ViewportHeight,
+
+                    devicePixelRatio =
+                        Diagnostica.Display.DevicePixelRatio
+                }
         };
-        
-        Stopwatch sw = new();
+
         var swTotale = Stopwatch.StartNew();
 
-        for (int i = 0; i < NumeroRichieste; i++)
+        try
         {
-            sw = Stopwatch.StartNew();
-
-            try
+            for (var i = 0; i < NumeroRichieste; i++)
             {
-                var response = await Http.PostAsJsonAsync(WebhookUrl, payload);
-     
-                var result = await response.Content.ReadFromJsonAsync<Dictionary<string, object>>();
-                UltimaRisposta = result?["parameter"]?.ToString() ?? "";
+                RichiestaCorrente = i + 1;
+
+                var sw = Stopwatch.StartNew();
+
+                var risultato = new RisultatoRichiesta
+                {
+                    Numero = RichiestaCorrente
+                };
+
+                try
+                {
+                    using var response =
+                        await Http.PostAsJsonAsync(
+                            webhookUri,
+                            payload);
+
+                    UltimaRisposta =
+                        await response.Content.ReadAsStringAsync();
+
+                    risultato.Successo =
+                        response.IsSuccessStatusCode;
+
+                    risultato.StatusCode =
+                        (int)response.StatusCode;
+
+                    risultato.Messaggio =
+                        EstraiMessaggioRisposta(
+                            UltimaRisposta);
+
+                    if (risultato.Successo)
+                        RichiesteRiuscite++;
+                    else
+                        RichiesteFallite++;
+                }
+                catch (Exception ex)
+                {
+                    UltimaRisposta =
+                        $"ERRORE: {ex.Message}";
+
+                    risultato.Successo = false;
+                    risultato.StatusCode = 0;
+                    risultato.Messaggio = UltimaRisposta;
+
+                    RichiesteFallite++;
+                }
+                finally
+                {
+                    sw.Stop();
+                }
+
+                risultato.TempoMs =
+                    sw.Elapsed.TotalMilliseconds;
+
+                Risultati.Add(risultato);
+
+                AggiornaStatisticheParziali();
+
+                await InvokeAsync(StateHasChanged);
             }
-            catch (Exception ex)
+        }
+        catch (Exception ex)
+        {
+            ErroreTest = ex.Message;
+        }
+        finally
+        {
+            swTotale.Stop();
+
+            TempoTotale =
+                swTotale.Elapsed.TotalMilliseconds;
+
+            if (Risultati.Count > 0)
             {
-                UltimaRisposta = $"ERRORE: {ex.Message}";
+                TempoMedio =
+                    Risultati.Average(x => x.TempoMs);
+
+                TempoMin =
+                    Risultati.Min(x => x.TempoMs);
+
+                TempoMax =
+                    Risultati.Max(x => x.TempoMs);
             }
 
-            sw.Stop();
+            if (swTotale.Elapsed.TotalSeconds > 0)
+            {
+                ReqSec =
+                    Risultati.Count /
+                    swTotale.Elapsed.TotalSeconds;
+            }
 
-            Tempi.Add( (sw.Elapsed.TotalMilliseconds).ToString("0.00") + " - " + UltimaRisposta);
+            InEsecuzione = false;
 
-            StateHasChanged();
+            await InvokeAsync(StateHasChanged);
+        }
+    }
 
-            TempoMin = sw.Elapsed.TotalMilliseconds < TempoMin ? sw.Elapsed.TotalMilliseconds : TempoMin;
-            TempoMax = sw.Elapsed.TotalMilliseconds > TempoMax ? sw.Elapsed.TotalMilliseconds : TempoMax;
+    private void AggiornaStatisticheParziali()
+    {
+        if (Risultati.Count == 0)
+            return;
 
+        TempoMin = Risultati.Min(x => x.TempoMs);
+        TempoMax = Risultati.Max(x => x.TempoMs);
+        TempoMedio = Risultati.Average(x => x.TempoMs);
+    }
+
+    private static string EstraiMessaggioRisposta(
+        string contenuto)
+    {
+        if (string.IsNullOrWhiteSpace(contenuto))
+            return "Risposta vuota";
+
+        try
+        {
+            using var documento =
+                JsonDocument.Parse(contenuto);
+
+            var root = documento.RootElement;
+
+            if (root.ValueKind == JsonValueKind.Object &&
+                root.TryGetProperty(
+                    "parameter",
+                    out var parameter))
+            {
+                return parameter.ToString();
+            }
+
+            return contenuto;
+        }
+        catch
+        {
+            return contenuto;
+        }
+    }
+
+    private void PulisciRisultati()
+    {
+        Risultati.Clear();
+
+        RichiestaCorrente = 0;
+        RichiesteRiuscite = 0;
+        RichiesteFallite = 0;
+
+        TempoMin = 0;
+        TempoMax = 0;
+        TempoMedio = 0;
+        TempoTotale = 0;
+        ReqSec = 0;
+
+        UltimaRisposta = string.Empty;
+        ErroreTest = string.Empty;
+    }
+
+    private string GetTestProgressStyle()
+    {
+        var percentuale = NumeroRichieste > 0
+            ? (double)RichiestaCorrente /
+              NumeroRichieste * 100
+            : 0;
+
+        percentuale =
+            Math.Clamp(percentuale, 0, 100);
+
+        var valore = percentuale.ToString(
+            "0.##",
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        return $"width:{valore}%;";
+    }
+
+    private string GetStorageBarStyle()
+    {
+        var percentuale = Math.Clamp(
+            Diagnostica?.Storage.UsagePercentage ?? 0,
+            0,
+            100);
+
+        var valore = percentuale.ToString(
+            "0.##",
+            System.Globalization.CultureInfo.InvariantCulture);
+
+        return $"width:{valore}%;";
+    }
+
+    private static string GetLogStatusClass(
+        RisultatoRichiesta risultato)
+    {
+        return risultato.Successo
+            ? "log-status log-success"
+            : "log-status log-error";
+    }
+
+    private static string SiNo(bool valore)
+        => valore ? "Sì" : "No";
+
+    private static string ValoreOPlaceholder(
+        string? valore)
+    {
+        return string.IsNullOrWhiteSpace(valore)
+            ? "Non disponibile"
+            : valore;
+    }
+
+    private static string ValoreOPlaceholder(
+        int? valore)
+    {
+        return valore?.ToString()
+            ?? "Non disponibile";
+    }
+
+    private static string FormatPercentuale(
+        double valore)
+    {
+        return $"{valore:0.00}%";
+    }
+
+    private static string FormatBytes(double valore)
+    {
+        if (valore <= 0)
+            return "Non disponibile";
+
+        string[] unita =
+        {
+            "B",
+            "KiB",
+            "MiB",
+            "GiB",
+            "TiB"
+        };
+
+        var indice = 0;
+
+        while (valore >= 1024 &&
+               indice < unita.Length - 1)
+        {
+            valore /= 1024;
+            indice++;
         }
 
-        swTotale.Stop();
+        return $"{valore:0.00} {unita[indice]}";
+    }
 
-        TempoMedio = swTotale.Elapsed.TotalMilliseconds / NumeroRichieste;
+    public async ValueTask DisposeAsync()
+    {
+        if (moduloJs is not null)
+        {
+            try
+            {
+                await moduloJs.DisposeAsync();
+            }
+            catch
+            {
+                // Il runtime JS potrebbe essere già stato chiuso.
+            }
+        }
 
-        ReqSec = NumeroRichieste / swTotale.Elapsed.TotalSeconds;
+        Http.Dispose();
+    }
 
-        InEsecuzione = false;
+    private sealed class RisultatoRichiesta
+    {
+        public int Numero { get; set; }
 
-        StateHasChanged();
+        public double TempoMs { get; set; }
+
+        public bool Successo { get; set; }
+
+        public int StatusCode { get; set; }
+
+        public string Messaggio { get; set; } =
+            string.Empty;
+    }
+
+    private sealed class DeviceDiagnostics
+    {
+        [JsonPropertyName("display")]
+        public DisplayDiagnostics Display { get; set; } =
+            new();
+
+        [JsonPropertyName("system")]
+        public SystemDiagnostics System { get; set; } =
+            new();
+
+        [JsonPropertyName("storage")]
+        public StorageDiagnostics Storage { get; set; } =
+            new();
+
+        [JsonPropertyName("connection")]
+        public ConnectionDiagnostics Connection { get; set; } =
+            new();
+
+        [JsonPropertyName("graphics")]
+        public GraphicsDiagnostics Graphics { get; set; } =
+            new();
+
+        [JsonPropertyName("features")]
+        public FeatureDiagnostics Features { get; set; } =
+            new();
+    }
+
+    private sealed class DisplayDiagnostics
+    {
+        [JsonPropertyName("screenWidth")]
+        public int ScreenWidth { get; set; }
+
+        [JsonPropertyName("screenHeight")]
+        public int ScreenHeight { get; set; }
+
+        [JsonPropertyName("availableWidth")]
+        public int AvailableWidth { get; set; }
+
+        [JsonPropertyName("availableHeight")]
+        public int AvailableHeight { get; set; }
+
+        [JsonPropertyName("viewportWidth")]
+        public int ViewportWidth { get; set; }
+
+        [JsonPropertyName("viewportHeight")]
+        public int ViewportHeight { get; set; }
+
+        [JsonPropertyName("visualViewportWidth")]
+        public double VisualViewportWidth { get; set; }
+
+        [JsonPropertyName("visualViewportHeight")]
+        public double VisualViewportHeight { get; set; }
+
+        [JsonPropertyName("estimatedPhysicalWidth")]
+        public int EstimatedPhysicalWidth { get; set; }
+
+        [JsonPropertyName("estimatedPhysicalHeight")]
+        public int EstimatedPhysicalHeight { get; set; }
+
+        [JsonPropertyName("devicePixelRatio")]
+        public double DevicePixelRatio { get; set; }
+
+        [JsonPropertyName("visualViewportScale")]
+        public double VisualViewportScale { get; set; }
+
+        [JsonPropertyName("colorDepth")]
+        public int ColorDepth { get; set; }
+
+        [JsonPropertyName("orientation")]
+        public string Orientation { get; set; } =
+            string.Empty;
+    }
+
+    private sealed class SystemDiagnostics
+    {
+        [JsonPropertyName("platform")]
+        public string Platform { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("language")]
+        public string Language { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("languages")]
+        public string Languages { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("hardwareConcurrency")]
+        public int? HardwareConcurrency { get; set; }
+
+        [JsonPropertyName("deviceMemoryGb")]
+        public double? DeviceMemoryGb { get; set; }
+
+        [JsonPropertyName("maxTouchPoints")]
+        public int MaxTouchPoints { get; set; }
+
+        [JsonPropertyName("cookieEnabled")]
+        public bool CookieEnabled { get; set; }
+
+        [JsonPropertyName("online")]
+        public bool Online { get; set; }
+
+        [JsonPropertyName("standalone")]
+        public bool Standalone { get; set; }
+
+        [JsonPropertyName("userAgent")]
+        public string UserAgent { get; set; } =
+            string.Empty;
+    }
+
+    private sealed class StorageDiagnostics
+    {
+        [JsonPropertyName("indexedDbSupported")]
+        public bool IndexedDbSupported { get; set; }
+
+        [JsonPropertyName("indexedDbTestSucceeded")]
+        public bool IndexedDbTestSucceeded { get; set; }
+
+        [JsonPropertyName("indexedDbMessage")]
+        public string IndexedDbMessage { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("quotaBytes")]
+        public double QuotaBytes { get; set; }
+
+        [JsonPropertyName("usageBytes")]
+        public double UsageBytes { get; set; }
+
+        [JsonPropertyName("availableBytes")]
+        public double AvailableBytes { get; set; }
+
+        [JsonPropertyName("usagePercentage")]
+        public double UsagePercentage { get; set; }
+
+        [JsonPropertyName("persistent")]
+        public bool? Persistent { get; set; }
+    }
+
+    private sealed class ConnectionDiagnostics
+    {
+        [JsonPropertyName("supported")]
+        public bool Supported { get; set; }
+
+        [JsonPropertyName("type")]
+        public string Type { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("effectiveType")]
+        public string EffectiveType { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("downlinkMbps")]
+        public double? DownlinkMbps { get; set; }
+
+        [JsonPropertyName("rttMs")]
+        public double? RttMs { get; set; }
+
+        [JsonPropertyName("saveData")]
+        public bool SaveData { get; set; }
+    }
+
+    private sealed class GraphicsDiagnostics
+    {
+        [JsonPropertyName("webGlSupported")]
+        public bool WebGlSupported { get; set; }
+
+        [JsonPropertyName("version")]
+        public string Version { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("vendor")]
+        public string Vendor { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("renderer")]
+        public string Renderer { get; set; } =
+            string.Empty;
+
+        [JsonPropertyName("maxTextureSize")]
+        public int MaxTextureSize { get; set; }
+    }
+
+    private sealed class FeatureDiagnostics
+    {
+        [JsonPropertyName("serviceWorker")]
+        public bool ServiceWorker { get; set; }
+
+        [JsonPropertyName("cacheStorage")]
+        public bool CacheStorage { get; set; }
+
+        [JsonPropertyName("webSocket")]
+        public bool WebSocket { get; set; }
+
+        [JsonPropertyName("pushManager")]
+        public bool PushManager { get; set; }
+
+        [JsonPropertyName("notifications")]
+        public bool Notifications { get; set; }
+
+        [JsonPropertyName("fullscreen")]
+        public bool Fullscreen { get; set; }
+
+        [JsonPropertyName("pictureInPicture")]
+        public bool PictureInPicture { get; set; }
+
+        [JsonPropertyName("webShare")]
+        public bool WebShare { get; set; }
     }
 }
-`
