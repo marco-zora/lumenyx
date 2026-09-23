@@ -1,0 +1,105 @@
+/* CSS for InstuctionPalette component */
+/* ========================================
+   PALETTE
+   ======================================== */
+
+.instruction-palette {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    gap: 0.75rem;
+}
+
+/* ========================================
+   TITOLO
+   ======================================== */
+
+.palette-title {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1.2;
+    text-transform: uppercase;
+}
+
+/* ========================================
+   CONTENITORE ELEMENTI
+   ======================================== */
+
+.palette-items {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-width: 0;
+    gap: 0.5rem;
+}
+
+/* ========================================
+   ELEMENTO TRASCINABILE
+   ======================================== */
+
+.palette-drag-item {
+    width: 100%;
+    min-width: 0;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+    .palette-drag-item:hover {
+        transform: translateY(-0.05rem);
+    }
+
+    .palette-drag-item:active {
+        cursor: grabbing;
+        opacity: 0.8;
+    }
+
+    /* ========================================
+   USA LE CARD ESISTENTI
+   ======================================== */
+
+    .palette-drag-item ::deep .instruction-card {
+        min-height: 2.7rem;
+    }
+
+    .palette-drag-item ::deep .instruction-content {
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+    /* ========================================
+   EFFETTO DURANTE DRAG
+   ======================================== */
+
+    .palette-drag-item.dragging {
+        opacity: 0.5;
+    }
+
+/* ========================================
+   MOBILE
+   ======================================== */
+
+@media (max-width: 48rem) {
+
+    .palette-items {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .palette-drag-item {
+        flex: 1 1 10rem;
+    }
+}
+
+@media (max-width: 30rem) {
+
+    .palette-items {
+        flex-direction: column;
+    }
+
+    .palette-drag-item {
+        flex-basis: auto;
+    }
+}

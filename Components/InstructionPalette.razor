@@ -1,0 +1,65 @@
+﻿
+<div class="instruction-palette">
+
+    <div class="palette-title">
+        Istruzioni
+    </div>
+
+    <div class="palette-items">
+
+        <div class="palette-drag-item"
+             draggable="true"
+             title="Trascina Video nella sequenza"
+             @ondragstart="BeginVideoDrag"
+             @ondragend="EndDrag">
+
+            <InstructionCard Icon="bi-play-fill"
+                             Type="video">
+
+                <span>Video</span>
+
+            </InstructionCard>
+
+        </div>
+
+        <div class="palette-drag-item"
+             draggable="true"
+             title="Trascina Immagine nella sequenza"
+             @ondragstart="BeginImageDrag"
+             @ondragend="EndDrag">
+
+            <InstructionCard Icon="bi-image"
+                             Type="image">
+
+                <span>Immagine</span>
+
+            </InstructionCard>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public EventCallback<string> OnInstructionDragStart { get; set; }
+
+    [Parameter]
+    public EventCallback OnInstructionDragEnd { get; set; }
+
+    private Task BeginVideoDrag()
+    {
+        return OnInstructionDragStart.InvokeAsync("video");
+    }
+
+    private Task BeginImageDrag()
+    {
+        return OnInstructionDragStart.InvokeAsync("image");
+    }
+
+    private Task EndDrag()
+    {
+        return OnInstructionDragEnd.InvokeAsync();
+    }
+}

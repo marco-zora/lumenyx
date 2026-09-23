@@ -1,0 +1,33 @@
+[
+  {
+    "id": "1",
+    "type": "video",
+    "name": "Cena per due",
+    "url": "/media/VIDEO-002.mp4"
+  },
+  {
+    "id": "2",
+    "type": "video",
+    "name": "Squalo",
+    "url": "/media/VIDEO-003.mp4"
+  },
+  {
+    "id": "2",
+    "type": "video",
+    "name": "Spiaggia",
+    "url": "/media/VIDEO-004.mp4"
+  },
+
+  {
+    "id": "2",
+    "type": "image",
+    "name": "Offerta Luglio",
+    "url": "/media/offerta-luglio.png"
+  },
+  {
+    "id": "3",
+    "type": "pdf",
+    "name": "Listino 2026",
+    "url": "/media/listino.pdf"
+  }
+]

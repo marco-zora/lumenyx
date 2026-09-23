@@ -1,0 +1,100 @@
+﻿
+
+
+<div class="@CardCssClass"
+     @onclick="HandleClick">
+
+    <i class="@IconCssClass"
+       aria-hidden="true"></i>
+
+    <div class="instruction-content">
+        @ChildContent
+    </div>
+
+</div>
+
+@code {
+    /// <summary>
+    /// Nome dell'icona Bootstrap Icons.
+    /// Esempi:
+    /// bi-play-fill
+    /// bi-image
+    /// bi-file-earmark-pdf
+    /// </summary>
+    [Parameter]
+    public string Icon { get; set; } = "bi-circle";
+
+    /// <summary>
+    /// Tipo dell'istruzione.
+    /// Determina colore e stile della card.
+    /// Esempi:
+    /// video
+    /// image
+    /// pdf
+    /// web
+    /// </summary>
+    [Parameter]
+    public string Type { get; set; } = "";
+
+    /// <summary>
+    /// Indica se la card è selezionata.
+    /// </summary>
+    [Parameter]
+    public bool Selected { get; set; }
+
+    /// <summary>
+    /// Contenuto specifico dell'istruzione.
+    /// Può contenere zero, uno o due parametri.
+    /// </summary>
+    [Parameter]
+    public RenderFragment? ChildContent { get; set; }
+
+    /// <summary>
+    /// Evento generato quando si clicca sulla card.
+    /// </summary>
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    private string CardCssClass
+    {
+        get
+        {
+            var classes = new List<string>
+            {
+                "instruction-card"
+            };
+
+            if (!string.IsNullOrWhiteSpace(Type))
+            {
+                classes.Add(Type);
+            }
+
+            if (Selected)
+            {
+                classes.Add("selected");
+            }
+
+            return string.Join(" ", classes);
+        }
+    }
+
+    private string IconCssClass
+    {
+        get
+        {
+            var iconName = string.IsNullOrWhiteSpace(Icon)
+                ? "bi-circle"
+                : Icon;
+
+            return $"bi {iconName} instruction-icon";
+        }
+    }
+
+    private async Task HandleClick()
+    {
+        if (OnClick.HasDelegate)
+        {
+            await OnClick.InvokeAsync();
+        }
+    }
+}

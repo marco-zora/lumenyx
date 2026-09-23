@@ -1,0 +1,24 @@
+
+
+.video {
+    background: #f5f9ff;
+    border-left: 0.35rem solid #0d6efd;
+}
+
+    .video .instruction-icon {
+        color: #0d6efd;
+    }
+
+.instruction-select {
+    width: 100%;
+    border: none;
+    background: transparent;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+    .instruction-select:focus {
+        outline: none;
+        box-shadow: none;
+    }

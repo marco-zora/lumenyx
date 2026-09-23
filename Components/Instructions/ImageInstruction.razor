@@ -1,0 +1,66 @@
+﻿@inject HttpClient Http
+
+
+<InstructionCard Icon="bi-image"
+                 Type="image">
+
+    <select class="instruction-select"
+            @bind="SelectedMediaId"
+            @onclick:stopPropagation="true">
+
+        @foreach (var image in Images)
+        {
+            <option value="@image.Id">
+                @image.Name
+            </option>
+        }
+
+    </select>
+
+    <input type="number"
+           class="instruction-input"
+           min="1"
+           max="999"
+           title="Durata in secondi"
+           @bind="DurationSeconds"
+           @onclick:stopPropagation="true" />
+
+</InstructionCard>
+
+@code {
+
+    [Parameter]
+    public string SelectedMediaId { get; set; } = "";
+
+    [Parameter]
+    public int DurationSeconds { get; set; } = 10;
+
+    private List<MediaItem> Images = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var media =
+            await Http.GetFromJsonAsync<List<MediaItem>>(
+                "media/media.json");
+
+        Images = media?
+            .Where(x => x.Type == "image")
+            .ToList()
+            ?? new();
+
+        if (Images.Count > 0 &&
+            string.IsNullOrWhiteSpace(SelectedMediaId))
+        {
+            SelectedMediaId = Images[0].Id;
+        }
+    }
+
+    public class MediaItem
+    {
+        public string Id { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+
+}

@@ -1,151 +1,167 @@
 ﻿@page "/program/{DeviceId}"
 
+
 <h3 class="page-title">
     Programma Device @DeviceId
 </h3>
 
 <div class="program-layout">
 
-    <!-- PREVIEW -->
+    <!-- PREVIEW 16:9 -->
 
-    <div class="preview-panel">
+    <section class="preview-panel">
 
         <div class="preview-frame">
 
-            <div class="preview-header">
-                Preview
-            </div>
-
             <div class="preview-content">
 
-                @if (SelectedStep != null)
-                {
-                    <div class="preview-command">
-                        @SelectedStep.Comando
-                    </div>
+                <i class="bi bi-display preview-icon"
+                   aria-hidden="true">
+                </i>
 
-                    <div class="preview-parameter">
-                        @SelectedStep.Parametro
-                    </div>
-                }
+                <div class="preview-title">
+                    Anteprima schermo
+                </div>
+
+                <div class="preview-subtitle">
+                    Formato 16:9
+                </div>
 
             </div>
 
         </div>
 
-    </div>
+    </section>
 
-    <!-- ISTRUZIONI -->
+    <!-- PALETTE E SEQUENZA -->
 
-    <div class="steps-panel">
+    <section class="workspace">
 
-        @foreach (var step in ListaStep)
-        {
-            <div class="step-card @(SelectedStep == step ? "selected" : "")"
-                 @onclick="() => SelectedStep = step">
+        <!-- PALETTE -->
 
-                <div class="step-top">
+        <aside class="palette-panel">
 
-                    <div class="step-number">
-                        #@step.Riga
-                    </div>
+            <div class="section-heading">
 
-                    <div class="step-command">
-                        @step.Comando
-                    </div>
-
+                <div class="section-title">
+                    Istruzioni disponibili
                 </div>
 
-                <div class="step-parameter">
-                    @step.Parametro
+                <div class="section-description">
+                    Trascina un’istruzione nella sequenza
                 </div>
 
             </div>
 
-            <div class="step-arrow">
-                ▼
-            </div>
-        }
+            <InstructionPalette OnInstructionDragStart="HandleInstructionDragStart" />
 
-    </div>
+        </aside>
+
+        <!-- LISTA ISTRUZIONI -->
+
+        <main class="sequence-panel">
+
+            <div class="section-heading sequence-heading">
+
+                <div>
+
+                    <div class="section-title">
+                        Sequenza
+                    </div>
+
+                    <div class="section-description">
+                        Programma dello schermo
+                    </div>
+
+                </div>
+
+                <div class="instruction-counter">
+                    @Instructions.Count istruzioni
+                </div>
+
+            </div>
+
+            <div class="drop-zone"
+                 @ondragover:preventDefault="true"
+                 @ondrop="HandleDrop">
+
+                <InstructionList>
+
+                    @foreach (var instruction in Instructions)
+                    {
+                        <div @key="instruction.Id">
+
+                            @switch (instruction.Type)
+                            {
+                                case "video":
+
+                                    <VideoInstruction />
+
+                                    break;
+
+                                case "image":
+
+                                    <ImageInstruction />
+
+                                    break;
+                            }
+
+                        </div>
+                    }
+
+                </InstructionList>
+
+            </div>
+
+        </main>
+
+    </section>
 
 </div>
 
 @code {
-
     [Parameter]
     public string DeviceId { get; set; } = "";
 
-    public class ProgramStep
+    private void HandleDrop(DragEventArgs e)
     {
-        public int Riga { get; set; }
-        public string Comando { get; set; } = "";
-        public string Parametro { get; set; } = "";
-    }
-
-    private List<ProgramStep> ListaStep = new();
-
-    private ProgramStep? SelectedStep;
-
-    protected override void OnInitialized()
-    {
-        ListaStep = new()
+        if (string.IsNullOrWhiteSpace(
+            DraggedInstructionType))
         {
-            new()
-            {
-                Riga = 1,
-                Comando = "HELLO_MESSAGE",
-                Parametro = "Benvenuto in Lumenyx"
-            },
+            return;
+        }
 
-            new()
+        Instructions.Add(
+            new InstructionItem
             {
-                Riga = 2,
-                Comando = "PLAY",
-                Parametro = "VIDEO-001.mp4"
-            },
+                Type = DraggedInstructionType
+            });
 
-            new()
-            {
-                Riga = 3,
-                Comando = "PLAY",
-                Parametro = "VIDEO-002.mp4"
-            },
-
-            new()
-            {
-                Riga = 4,
-                Comando = "WEB",
-                Parametro = "PROMO_SETTEMBRE.HTML"
-            },
-
-            new()
-            {
-                Riga = 5,
-                Comando = "OVERLAY",
-                Parametro = "LOGO_AZIENDA"
-            },
-             new()
-            {
-                Riga = 6,
-                Comando = "OVERLAY",
-                Parametro = "LOGO_AZIENDA"
-            }, 
-            new()
-            {
-                Riga = 7,
-                Comando = "OVERLAY",
-                Parametro = "LOGO_AZIENDA"
-            },
-             new()
-            {
-                Riga = 8,
-                Comando = "OVERLAY",
-                Parametro = "LOGO_AZIENDA"
-            }
-
-        };
-
-        SelectedStep = ListaStep.First();
+        DraggedInstructionType = null;
     }
+
+    private string? DraggedInstructionType;
+
+    private sealed class InstructionItem
+    {
+        public Guid Id { get; set; } = Guid.NewGuid();
+
+        public string Type { get; set; } = "";
+    }
+
+    private List<InstructionItem> Instructions = new()
+{
+    new() { Type = "video" },
+    new() { Type = "image" },
+    new() { Type = "video" }
+};
+
+    private void HandleInstructionDragStart(
+        string instructionType)
+    {
+        DraggedInstructionType = instructionType;
+    }
+
+   
 }
+

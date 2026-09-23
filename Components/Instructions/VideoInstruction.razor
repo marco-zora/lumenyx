@@ -1,0 +1,54 @@
+﻿@inject HttpClient Http
+
+
+<InstructionCard Icon="bi-play-fill"
+                 Type="video">
+
+    <select class="instruction-select"
+            @bind="SelectedMediaId"
+            @onclick:stopPropagation="true">
+
+        @foreach (var video in Videos)
+        {
+            <option value="@video.Id">
+                @video.Name
+            </option>
+        }
+
+    </select>
+
+</InstructionCard>
+
+@code {
+
+    [Parameter]
+    public string SelectedMediaId { get; set; } = "";
+
+    private List<MediaItem> Videos = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var media =
+            await Http.GetFromJsonAsync<List<MediaItem>>(
+                "media/media.json");
+
+        Videos = media?
+            .Where(x => x.Type == "video")
+            .ToList()
+            ?? new();
+
+        if (Videos.Count > 0 &&
+            string.IsNullOrWhiteSpace(SelectedMediaId))
+        {
+            SelectedMediaId = Videos[0].Id;
+        }
+    }
+
+    public class MediaItem
+    {
+        public string Id { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+    }
+}

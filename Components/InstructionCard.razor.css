@@ -1,0 +1,177 @@
+/* ========================================
+   BASE
+   ======================================== */
+
+.instruction-card {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    min-height: 3rem;
+    gap: 0.75rem;
+    padding: 0.35rem 0.75rem;
+    border: 0.08rem solid rgba(0, 0, 0, 0.08);
+    border-left-width: 0.35rem;
+    border-radius: 0.65rem;
+    background-color: white;
+    box-sizing: border-box;
+    box-shadow: 0 0.08rem 0.2rem rgba(0, 0, 0, 0.08);
+    transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+    .instruction-card:hover {
+        box-shadow: 0 0.15rem 0.4rem rgba(0, 0, 0, 0.12);
+    }
+
+    /* ========================================
+   FUTURA SELEZIONE
+   ======================================== */
+
+    .instruction-card.selected {
+        outline: 0.12rem solid var(--instruction-color);
+    }
+
+/* ========================================
+   ICONA
+   ======================================== */
+
+.instruction-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.5rem;
+    height: 1.5rem;
+    flex-shrink: 0;
+    font-size: 1.3rem;
+}
+
+/* ========================================
+   CONTENUTO
+   ======================================== */
+
+.instruction-content {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex: 1;
+    min-width: 0;
+    gap: 0.75rem;
+}
+
+    /* ========================================
+   SELECT COMUNE
+   ======================================== */
+
+    .instruction-content ::deep .instruction-select {
+        flex: 0 1 auto;
+        width: auto;
+        min-width: 12rem;
+        border: none;
+        background: transparent;
+        font-size: 1rem;
+        font-weight: 600;
+        cursor: pointer;
+    }
+
+        .instruction-content ::deep .instruction-select:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+    /* ========================================
+   INPUT COMUNE
+   ======================================== */
+
+    .instruction-content ::deep .instruction-input {
+        width: 4rem;
+        border: 0.08rem solid rgba(0, 0, 0, 0.15);
+        border-radius: 0.35rem;
+        padding: 0.2rem;
+        text-align: center;
+        font-size: 0.95rem;
+        font-weight: 600;
+    }
+
+        .instruction-content ::deep .instruction-input:focus {
+            outline: none;
+            border-color: var(--instruction-color);
+        }
+
+/* ========================================
+   VIDEO
+   ======================================== */
+
+.instruction-card.video {
+    --instruction-color: #0d6efd;
+    background-color: #f2f7ff;
+    border-color: rgba(13, 110, 253, 0.18);
+    border-left-color: var(--instruction-color);
+}
+
+    .instruction-card.video .instruction-icon {
+        color: var(--instruction-color);
+    }
+
+/* ========================================
+   IMAGE
+   ======================================== */
+
+.instruction-card.image {
+    --instruction-color: #198754;
+    background-color: #f4fff6;
+    border-color: rgba(25, 135, 84, 0.18);
+    border-left-color: var(--instruction-color);
+}
+
+    .instruction-card.image .instruction-icon {
+        color: var(--instruction-color);
+    }
+
+/* ========================================
+   PDF
+   ======================================== */
+
+.instruction-card.pdf {
+    --instruction-color: #dc3545;
+    background-color: #fff5f5;
+    border-color: rgba(220, 53, 69, 0.18);
+    border-left-color: var(--instruction-color);
+}
+
+    .instruction-card.pdf .instruction-icon {
+        color: var(--instruction-color);
+    }
+
+/* ========================================
+   WEB
+   ======================================== */
+
+.instruction-card.web {
+    --instruction-color: #6f42c1;
+    background-color: #faf5ff;
+    border-color: rgba(111, 66, 193, 0.18);
+    border-left-color: var(--instruction-color);
+}
+
+    .instruction-card.web .instruction-icon {
+        color: var(--instruction-color);
+    }
+
+/* ========================================
+   MOBILE
+   ======================================== */
+
+@media (max-width: 35rem) {
+
+    .instruction-card {
+        gap: 0.5rem;
+        padding: 0.45rem 0.6rem;
+    }
+
+    .instruction-icon {
+        font-size: 1.2rem;
+    }
+
+    .instruction-content ::deep .instruction-select {
+        font-size: 0.95rem;
+    }
+}
