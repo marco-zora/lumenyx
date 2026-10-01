@@ -168,7 +168,9 @@
 
     .delete-btn i {
         font-size: 1rem;
-        /* ========================================
+    }
+ 
+/* ========================================
    CORPO E CARD ISTRUZIONE
    ======================================== */
 
@@ -215,8 +217,7 @@
             text-align: center;
             box-sizing: border-box;
         }
-
-/* ========================================
+        /* ========================================
    VIEWPORT STRETTE TABLET VERTICALI
    ======================================== */
 
@@ -248,26 +249,27 @@
             .instruction-toolbar {
                 display: flex;
                 flex-direction: row;
-                
+            }
+        }
 /* ========================================
    VIEWPORT IPHONE E TABLET VERTICALI STRETTI
    ======================================== */
-                @media (max-width: 30rem) {
+            @media (max-width: 30rem) {
 
-                    .instruction-row {
-                        grid-template-columns: auto auto minmax(0, 1fr);
-                        gap: 0.35rem;
-                    }
-
-                    .instruction-toolbar {
-                        flex-direction: row;
-                        gap: 0.20rem;
-                    }
-
-                    .instruction-number,
-                    .move-btn,
-                    .delete-btn {
-                        width: 2.1rem;
-                        height: 2.1rem;
-                    }
+                .instruction-row {
+                    grid-template-columns: auto auto minmax(0, 1fr);
+                    gap: 0.35rem;
                 }
+
+                .instruction-toolbar {
+                    flex-direction: row;
+                    gap: 0.20rem;
+                }
+
+                .instruction-number,
+                .move-btn,
+                .delete-btn {
+                    width: 2.1rem;
+                    height: 2.1rem;
+                }
+            }
