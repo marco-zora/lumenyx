@@ -138,121 +138,136 @@
     }
 
 
-/* ========================================
+.delete-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 2.5rem;
+    padding: 0;
+    color: white;
+    background-color: #dc2626;
+    border: none;
+    border-radius: 0.7rem;
+    cursor: pointer;
+    box-shadow: 0 0.125rem 0.35rem rgba(220, 38, 38, 0.25);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+    .delete-btn:hover {
+        background-color: #b91c1c;
+        box-shadow: 0 0.25rem 0.55rem rgba(220, 38, 38, 0.35);
+        transform: translateY(-0.0625rem);
+    }
+
+    .delete-btn:active {
+        background-color: #991b1b;
+        transform: translateY(0);
+    }
+
+    .delete-btn i {
+        font-size: 1rem;
+        /* ========================================
    CORPO E CARD ISTRUZIONE
    ======================================== */
 
-.instruction-body {
-    width: 100%;
-    max-width: 48rem;
-    min-width: 0;
-}
-
-    /*
-   InstructionCard è un componente figlio.
-   ::deep consente al CSS isolato di InstructionList
-   di raggiungere l'elemento principale della card.
-*/
-
-    .instruction-body ::deep .instruction-card {
-        width: 100%;
-        max-width: 48rem;
-        box-sizing: border-box;
-    }
+        .instruction-body {
+            width: 100%;
+            max-width: 48rem;
+            min-width: 0;
+        }
 
 
-/* ========================================
+            .instruction-body ::deep .instruction-card {
+                width: 100%;
+                max-width: 48rem;
+                box-sizing: border-box;
+            }
+        /* ========================================
    TIPO NON SUPPORTATO
    ======================================== */
 
-.unsupported-instruction {
-    width: 100%;
-    max-width: 48rem;
-    padding: 0.75rem 1rem;
-    color: #991b1b;
-    background-color: #fef2f2;
-    border: 0.0625rem solid #fecaca;
-    border-radius: 0.7rem;
-    font-size: 0.9rem;
-    box-sizing: border-box;
-}
-
-
-/* ========================================
+        .unsupported-instruction {
+            width: 100%;
+            max-width: 48rem;
+            padding: 0.75rem 1rem;
+            color: #991b1b;
+            background-color: #fef2f2;
+            border: 0.0625rem solid #fecaca;
+            border-radius: 0.7rem;
+            font-size: 0.9rem;
+            box-sizing: border-box;
+        }
+        /* ========================================
    LISTA VUOTA
    ======================================== */
 
-.instruction-list-empty {
-    width: 100%;
-    max-width: 48rem;
-    padding: 1rem;
-    color: #64748b;
-    background-color: #f8fafc;
-    border: 0.0625rem solid #e2e8f0;
-    border-radius: 0.75rem;
-    font-size: 0.9rem;
-    text-align: center;
-    box-sizing: border-box;
-}
-
-
-/* ========================================
-   VIEWPORT STRETTE
-   ======================================== */
-
-@media (max-width: 48rem) {
-
-    .instruction-row {
-        grid-template-columns: 2.25rem auto minmax(0, 1fr);
-        gap: 0.45rem;
-    }
-
-    .instruction-number,
-    .move-btn {
-        width: 2.25rem;
-        height: 2.25rem;
-    }
-
-    .move-btn {
-        flex-basis: 2.25rem;
-        border-radius: 0.6rem;
-    }
-
-    .instruction-number {
-        font-size: 0.82rem;
-        border-radius: 0.6rem;
-    }
-
-    .instruction-toolbar {
-        gap: 0.25rem;
-    }
-}
-
+        .instruction-list-empty {
+            width: 100%;
+            max-width: 48rem;
+            padding: 1rem;
+            color: #64748b;
+            background-color: #f8fafc;
+            border: 0.0625rem solid #e2e8f0;
+            border-radius: 0.75rem;
+            font-size: 0.9rem;
+            text-align: center;
+            box-sizing: border-box;
+        }
 
 /* ========================================
-   TELEFONI MOLTO STRETTI
+   VIEWPORT STRETTE TABLET VERTICALI
    ======================================== */
 
-@media (max-width: 30rem) {
+        @media (max-width: 48rem) {
 
-    .instruction-row {
-        grid-template-columns: 2.25rem minmax(0, 1fr);
-        align-items: start;
-    }
+            .instruction-row {
+                grid-template-columns: 2.25rem auto minmax(0, 1fr);
+                gap: 0.45rem;
+            }
 
-    .instruction-number {
-        grid-column: 1;
-        grid-row: 1;
-    }
+            .instruction-number,
+            .move-btn,
+            .delete-btn {
+                width: 2.25rem;
+                height: 2.25rem;
+            }
 
-    .instruction-toolbar {
-        grid-column: 1;
-        grid-row: 2;
-        flex-direction: column;
-    }
+            .move-btn,
+            .delete-btn {
+                flex-basis: 2.25rem;
+                border-radius: 0.6rem;
+            }
 
-    .instruction-body {
-        grid-column: 2;
-        grid-row: 1 / span 2;
-    }
-}
+            .instruction-number {
+                font-size: 0.82rem;
+                border-radius: 0.6rem;
+            }
+
+            .instruction-toolbar {
+                display: flex;
+                flex-direction: row;
+                
+/* ========================================
+   VIEWPORT IPHONE E TABLET VERTICALI STRETTI
+   ======================================== */
+                @media (max-width: 30rem) {
+
+                    .instruction-row {
+                        grid-template-columns: auto auto minmax(0, 1fr);
+                        gap: 0.35rem;
+                    }
+
+                    .instruction-toolbar {
+                        flex-direction: row;
+                        gap: 0.20rem;
+                    }
+
+                    .instruction-number,
+                    .move-btn,
+                    .delete-btn {
+                        width: 2.1rem;
+                        height: 2.1rem;
+                    }
+                }

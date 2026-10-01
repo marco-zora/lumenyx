@@ -57,6 +57,18 @@
 
                         </button>
 
+
+
+                        <button type="button"
+                                class="delete-btn"
+                                title="Elimina istruzione"
+                                aria-label="Elimina istruzione"
+                                @onclick="() => DeleteInstruction(instruction)">
+
+                            <i class="bi bi-trash"></i>
+
+                        </button>
+
                     </div>
 
                     <div class="instruction-body">
@@ -130,6 +142,11 @@
 
         Instructions.RemoveAt(currentIndex);
         Instructions.Insert(currentIndex + 1, instruction);
+    }
+
+    private void DeleteInstruction(InstructionItem instruction)
+    {
+        Instructions.Remove(instruction);
     }
 
 }
