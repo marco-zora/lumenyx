@@ -1,177 +1,98 @@
 /* ========================================
-   BASE
+   CARD COMUNE DELL'ISTRUZIONE
    ======================================== */
 
 .instruction-card {
-    display: flex;
+    display: grid;
+    grid-template-columns: 5.5rem minmax(0, 1fr) auto;
     align-items: center;
     width: 100%;
-    min-height: 3rem;
+    min-width: 0;
     gap: 0.75rem;
-    padding: 0.35rem 0.75rem;
-    border: 0.08rem solid rgba(0, 0, 0, 0.08);
-    border-left-width: 0.35rem;
-    border-radius: 0.65rem;
-    background-color: white;
+    padding: 0.40rem 0.75rem 0.40rem 0.40rem;
+    background-color: #ffffff;
+    border: 0.0625rem solid #e2e8f0;
+    border-radius: 0.9rem;
     box-sizing: border-box;
-    box-shadow: 0 0.08rem 0.2rem rgba(0, 0, 0, 0.08);
-    transition: box-shadow 0.15s ease, transform 0.15s ease;
 }
 
-    .instruction-card:hover {
-        box-shadow: 0 0.15rem 0.4rem rgba(0, 0, 0, 0.12);
-    }
-
-    /* ========================================
-   FUTURA SELEZIONE
+/* ========================================
+   AREA THUMBNAIL
    ======================================== */
 
-    .instruction-card.selected {
-        outline: 0.12rem solid var(--instruction-color);
+.instruction-thumbnail {
+    width: 5.5rem;
+    aspect-ratio: 16 / 9;
+    overflow: hidden;
+    border-radius: 0.5rem;
+    background-color: #f1f5f9;
+}
+
+
+    /* Il contenuto della thumbnail deve riempire
+   completamente il contenitore 16:9 */
+
+    .instruction-thumbnail ::deep img,
+    .instruction-thumbnail ::deep video,
+    .instruction-thumbnail ::deep .video-thumbnail,
+    .instruction-thumbnail ::deep .video-thumbnail-placeholder {
+        display: block;
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+        object-fit: cover;
+        object-position: center;
+        border: none;
+        border-radius: inherit;
+        box-sizing: border-box;
     }
+
+
+    /* Correzione per i placeholder basati su div */
+
+    .instruction-thumbnail ::deep .video-thumbnail-placeholder {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
 
 /* ========================================
-   ICONA
+   CONTENUTO CENTRALE
    ======================================== */
 
-.instruction-icon {
+.instruction-main {
+    min-width: 0;
+    overflow: hidden;
+}
+
+
+/* ========================================
+   AREA MENU
+   ======================================== */
+
+.instruction-menu {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 1.5rem;
-    height: 1.5rem;
     flex-shrink: 0;
-    font-size: 1.3rem;
 }
 
-/* ========================================
-   CONTENUTO
-   ======================================== */
-
-.instruction-content {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    flex: 1;
-    min-width: 0;
-    gap: 0.75rem;
-}
-
-    /* ========================================
-   SELECT COMUNE
-   ======================================== */
-
-    .instruction-content ::deep .instruction-select {
-        flex: 0 1 auto;
-        width: auto;
-        min-width: 12rem;
-        border: none;
-        background: transparent;
-        font-size: 1rem;
-        font-weight: 600;
-        cursor: pointer;
-    }
-
-        .instruction-content ::deep .instruction-select:focus {
-            outline: none;
-            box-shadow: none;
-        }
-
-    /* ========================================
-   INPUT COMUNE
-   ======================================== */
-
-    .instruction-content ::deep .instruction-input {
-        width: 4rem;
-        border: 0.08rem solid rgba(0, 0, 0, 0.15);
-        border-radius: 0.35rem;
-        padding: 0.2rem;
-        text-align: center;
-        font-size: 0.95rem;
-        font-weight: 600;
-    }
-
-        .instruction-content ::deep .instruction-input:focus {
-            outline: none;
-            border-color: var(--instruction-color);
-        }
 
 /* ========================================
-   VIDEO
+   VIEWPORT STRETTE
    ======================================== */
 
-.instruction-card.video {
-    --instruction-color: #0d6efd;
-    background-color: #f2f7ff;
-    border-color: rgba(13, 110, 253, 0.18);
-    border-left-color: var(--instruction-color);
-}
-
-    .instruction-card.video .instruction-icon {
-        color: var(--instruction-color);
-    }
-
-/* ========================================
-   IMAGE
-   ======================================== */
-
-.instruction-card.image {
-    --instruction-color: #198754;
-    background-color: #f4fff6;
-    border-color: rgba(25, 135, 84, 0.18);
-    border-left-color: var(--instruction-color);
-}
-
-    .instruction-card.image .instruction-icon {
-        color: var(--instruction-color);
-    }
-
-/* ========================================
-   PDF
-   ======================================== */
-
-.instruction-card.pdf {
-    --instruction-color: #dc3545;
-    background-color: #fff5f5;
-    border-color: rgba(220, 53, 69, 0.18);
-    border-left-color: var(--instruction-color);
-}
-
-    .instruction-card.pdf .instruction-icon {
-        color: var(--instruction-color);
-    }
-
-/* ========================================
-   WEB
-   ======================================== */
-
-.instruction-card.web {
-    --instruction-color: #6f42c1;
-    background-color: #faf5ff;
-    border-color: rgba(111, 66, 193, 0.18);
-    border-left-color: var(--instruction-color);
-}
-
-    .instruction-card.web .instruction-icon {
-        color: var(--instruction-color);
-    }
-
-/* ========================================
-   MOBILE
-   ======================================== */
-
-@media (max-width: 35rem) {
+@media (max-width: 30rem) {
 
     .instruction-card {
-        gap: 0.5rem;
-        padding: 0.45rem 0.6rem;
+        grid-template-columns: 5rem minmax(0, 1fr) auto;
+        gap: 0.65rem;
+        padding: 0.65rem;
     }
 
-    .instruction-icon {
-        font-size: 1.2rem;
-    }
-
-    .instruction-content ::deep .instruction-select {
-        font-size: 0.95rem;
+    .instruction-thumbnail {
+        width: 5rem;
     }
 }

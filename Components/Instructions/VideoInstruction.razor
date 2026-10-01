@@ -1,54 +1,310 @@
-﻿@inject HttpClient Http
+﻿@using System.Net.Http.Json
+@using BlazorPWA.Components
+@inject HttpClient Http
 
+<InstructionCard>
 
-<InstructionCard Icon="bi-play-fill"
-                 Type="video">
-
-    <select class="instruction-select"
-            @bind="SelectedMediaId"
-            @onclick:stopPropagation="true">
-
-        @foreach (var video in Videos)
+    <ThumbnailContent>
+        @if (!string.IsNullOrWhiteSpace(SelectedThumbnailUrl))
         {
-            <option value="@video.Id">
-                @video.Name
-            </option>
+            <img src="@SelectedThumbnailUrl"
+                 class="video-thumbnail"
+                 alt="Thumbnail del video selezionato" />
+        }
+        else
+        {
+            <div class="video-thumbnail-placeholder">
+                <i class="bi bi-play-fill"></i>
+            </div>
+        }
+    </ThumbnailContent>
+
+    <MainContent>
+        <div class="video-title">
+            @(string.IsNullOrWhiteSpace(SelectedVideoName)
+                ? "Nessun video selezionato"
+                : SelectedVideoName)
+        </div>
+
+        <div class="video-subtitle">
+            Video · @FormatDuration(SelectedDurationSeconds)
+        </div>
+    </MainContent>
+
+    <MenuContent>
+
+        @if (ShowMenu)
+        {
+            <div class="menu-overlay"
+                 @onclick="CloseMenu">
+            </div>
         }
 
-    </select>
+        <div class="video-menu-container">
+
+            <button type="button"
+                    class="menu-btn"
+                    title="Modifica istruzione"
+                    aria-label="Modifica istruzione video"
+                    @onclick="ToggleMenu"
+                    @onclick:stopPropagation="true">
+                <i class="bi bi-three-dots-vertical"></i>
+            </button>
+
+            @if (ShowMenu)
+            {
+                <div class="video-menu"
+                     @onclick:stopPropagation="true">
+
+                    @if (!ShowVideoList)
+                    {
+                        <div class="video-menu-header">
+                            VIDEO
+                        </div>
+
+                        <button type="button"
+                                class="video-menu-item"
+                                @onclick="OpenVideoList">
+                            <i class="bi bi-play-circle"></i>
+                            <span>Seleziona video</span>
+                        </button>
+
+                        <div class="video-menu-divider"></div>
+
+                        <button type="button"
+                                class="video-menu-item"
+                                @onclick="ChangeType">
+                            <i class="bi bi-arrow-repeat"></i>
+                            <span>Cambia tipo</span>
+                        </button>
+                    }
+                    else
+                    {
+                        <div class="video-list-header">
+                            <button type="button"
+                                    class="video-back-btn"
+                                    title="Torna al menu"
+                                    aria-label="Torna al menu"
+                                    @onclick="CloseVideoList">
+                                <i class="bi bi-arrow-left"></i>
+                            </button>
+
+                            <span>Seleziona video</span>
+                        </div>
+
+                        <div class="video-list">
+                            @if (IsLoadingVideos)
+                            {
+                                <div class="video-list-message">
+                                    Caricamento video...
+                                </div>
+                            }
+                            else if (!string.IsNullOrWhiteSpace(LoadError))
+                            {
+                                <div class="video-list-message video-list-error">
+                                    @LoadError
+                                </div>
+                            }
+                            else if (Videos.Count == 0)
+                            {
+                                <div class="video-list-message">
+                                    Nessun video disponibile
+                                </div>
+                            }
+                            else
+                            {
+                                @foreach (var video in Videos)
+                                {
+                                    bool isSelected = video.Id == SelectedVideoId;
+
+                                    <button type="button"
+                                            class="video-list-item @(isSelected ? "selected" : null)"
+                                            @onclick="() => SelectVideo(video)">
+
+                                        <div class="video-list-thumbnail">
+                                            @if (!string.IsNullOrWhiteSpace(video.ThumbnailUrl))
+                                            {
+                                                <img src="@video.ThumbnailUrl"
+                                                     class="video-list-thumbnail-image"
+                                                     alt="@($"Thumbnail di {video.Name}")"
+                                                     loading="lazy" />
+                                            }
+                                            else
+                                            {
+                                                <div class="video-list-thumbnail-placeholder">
+                                                    <i class="bi bi-play-fill"></i>
+                                                </div>
+                                            }
+                                        </div>
+
+                                        <div class="video-list-info">
+                                            <div class="video-list-name">
+                                                @video.Name
+                                            </div>
+
+                                            <div class="video-list-type">
+                                                Video
+                                            </div>
+                                        </div>
+
+                                        @if (isSelected)
+                                        {
+                                            <i class="bi bi-check-lg video-selected-icon"></i>
+                                        }
+
+                                    </button>
+                                }
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </MenuContent>
 
 </InstructionCard>
 
 @code {
+    [Parameter]
+    public string SelectedVideoId { get; set; } = string.Empty;
 
     [Parameter]
-    public string SelectedMediaId { get; set; } = "";
+    public EventCallback<string> SelectedVideoIdChanged { get; set; }
 
-    private List<MediaItem> Videos = new();
+    [Parameter]
+    public EventCallback OnChangeType { get; set; }
 
-    protected override async Task OnInitializedAsync()
+    private List<MediaItem> Videos { get; set; } = new();
+    private string SelectedVideoName { get; set; } = string.Empty;
+    private string SelectedThumbnailUrl { get; set; } = string.Empty;
+    
+    private bool ShowMenu { get; set; }
+    private bool ShowVideoList { get; set; }
+    private bool IsLoadingVideos { get; set; }
+    private bool VideosLoaded { get; set; }
+    private string? LoadError { get; set; }
+    private double SelectedDurationSeconds;
+
+
+    
+    protected override void OnParametersSet()
     {
-        var media =
-            await Http.GetFromJsonAsync<List<MediaItem>>(
-                "media/media.json");
-
-        Videos = media?
-            .Where(x => x.Type == "video")
-            .ToList()
-            ?? new();
-
-        if (Videos.Count > 0 &&
-            string.IsNullOrWhiteSpace(SelectedMediaId))
+        if (VideosLoaded)
         {
-            SelectedMediaId = Videos[0].Id;
+            ApplyCurrentSelection();
         }
     }
 
-    public class MediaItem
+    private void ToggleMenu()
     {
-        public string Id { get; set; } = "";
-        public string Type { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Url { get; set; } = "";
+        ShowMenu = !ShowMenu;
+
+        if (!ShowMenu)
+        {
+            ShowVideoList = false;
+        }
+    }
+
+    private void CloseMenu()
+    {
+        ShowMenu = false;
+        ShowVideoList = false;
+    }
+
+    private async Task OpenVideoList()
+    {
+        ShowVideoList = true;
+
+        if (!VideosLoaded)
+        {
+            await LoadVideosAsync();
+        }
+    }
+
+    private void CloseVideoList()
+    {
+        ShowVideoList = false;
+    }
+
+    private async Task LoadVideosAsync()
+    {
+        IsLoadingVideos = true;
+        LoadError = null;
+
+        try
+        {
+            var media = await Http.GetFromJsonAsync<List<MediaItem>>(
+                "media/media.json");
+
+            Videos = media?
+                .Where(item =>
+                    string.Equals(
+                        item.Type,
+                        "video",
+                        StringComparison.OrdinalIgnoreCase))
+                .ToList()
+                ?? new List<MediaItem>();
+
+            VideosLoaded = true;
+            ApplyCurrentSelection();
+        }
+        catch (Exception)
+        {
+            Videos.Clear();
+            LoadError = "Impossibile caricare la lista dei video.";
+        }
+        finally
+        {
+            IsLoadingVideos = false;
+        }
+    }
+
+    private void ApplyCurrentSelection()
+    {
+        if (string.IsNullOrWhiteSpace(SelectedVideoId))
+        {
+            SelectedVideoName = string.Empty;
+            SelectedThumbnailUrl = string.Empty;
+            return;
+        }
+
+        var selectedVideo = Videos.FirstOrDefault(
+            video => video.Id == SelectedVideoId);
+
+        if (selectedVideo is null)
+        {
+            SelectedVideoName = string.Empty;
+            SelectedThumbnailUrl = string.Empty;
+            return;
+        }
+
+        SelectedVideoName = selectedVideo.Name;
+        SelectedThumbnailUrl = selectedVideo.ThumbnailUrl;
+    }
+
+    private async Task SelectVideo(MediaItem video)
+    {
+        SelectedVideoId = video.Id;
+        SelectedVideoName = video.Name;
+        SelectedThumbnailUrl = video.ThumbnailUrl;
+        SelectedDurationSeconds = video.DurationSeconds;
+
+        CloseMenu();
+
+        await SelectedVideoIdChanged.InvokeAsync(SelectedVideoId);
+    }
+
+    private async Task ChangeType()
+    {
+        CloseMenu();
+        await OnChangeType.InvokeAsync();
+    }
+
+   
+    private string FormatDuration(double seconds)
+    {
+        return TimeSpan
+            .FromSeconds(seconds)
+            .ToString(@"mm\:ss");
     }
 }

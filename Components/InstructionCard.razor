@@ -1,4 +1,37 @@
 ﻿
+<div class="instruction-card">
+
+    <div class="instruction-thumbnail">
+        @ThumbnailContent
+    </div>
+
+    <div class="instruction-main">
+        @MainContent
+    </div>
+
+    <div class="instruction-menu">
+        @MenuContent
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public RenderFragment? ThumbnailContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? MainContent { get; set; }
+
+    [Parameter]
+    public RenderFragment? MenuContent { get; set; }
+}
+
+
+
+
+
+@*
 <div class="@CardCssClass"
      @onclick="HandleClick">
 
@@ -96,3 +129,4 @@
         }
     }
 }
+*@
