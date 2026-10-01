@@ -1,43 +1,34 @@
 ﻿@page "/program/{DeviceId}"
 
-
-<h3 class="page-title">
-    Programma Device @DeviceId
-</h3>
+@using BlazorPWA.Components.Instructions
 
 <div class="program-layout">
 
-    <!-- PREVIEW 16:9 -->
+    <div class="left-column">
 
-    <section class="preview-panel">
+        <section class="preview-panel">
 
-        <div class="preview-frame">
+            <div class="preview-frame">
 
-            <div class="preview-content">
+                <div class="preview-content">
 
-                <i class="bi bi-display preview-icon"
-                   aria-hidden="true">
-                </i>
+                    <i class="bi bi-display preview-icon"
+                       aria-hidden="true">
+                    </i>
 
-                <div class="preview-title">
-                    Anteprima schermo
-                </div>
+                    <div class="preview-title">
+                        Anteprima schermo
+                    </div>
 
-                <div class="preview-subtitle">
-                    Formato 16:9
+                    <div class="preview-subtitle">
+                        Formato 16:9
+                    </div>
+
                 </div>
 
             </div>
 
-        </div>
-
-    </section>
-
-    <!-- PALETTE E SEQUENZA -->
-
-    <section class="workspace">
-
-        <!-- PALETTE -->
+        </section>
 
         <aside class="palette-panel">
 
@@ -48,31 +39,25 @@
                 </div>
 
                 <div class="section-description">
-                    Trascina un’istruzione nella sequenza
+                    Premi + per aggiungere una istruzione
                 </div>
 
             </div>
 
-            <InstructionPalette OnInstructionDragStart="HandleInstructionDragStart" />
+            <InstructionPalette OnAddInstruction="AddInstruction" />
 
         </aside>
 
-        <!-- LISTA ISTRUZIONI -->
+    </div>
 
-        <main class="sequence-panel">
+    <main class="sequence-panel">
 
-            <div class="section-heading sequence-heading">
+        <div class="section-heading sequence-heading">
 
-                <div>
+            <div class="sequence-title-row">
 
-                    <div class="section-title">
-                        Sequenza
-                    </div>
-
-                    <div class="section-description">
-                        Programma dello schermo
-                    </div>
-
+                <div class="section-title">
+                    Sequenza
                 </div>
 
                 <div class="instruction-counter">
@@ -81,52 +66,34 @@
 
             </div>
 
-            <div class="drop-zone"
-                 @ondragover:preventDefault="true"
-                 @ondrop="HandleDrop">
-
-                <InstructionList>
-
-                    @foreach (var instruction in Instructions)
-                    {
-                        <div @key="instruction.Id">
-
-                            @switch (instruction.Type)
-                            {
-                                case "video":
-
-                                    <VideoInstruction />
-
-                                    break;
-
-                                case "image":
-
-                                    <ImageInstruction />
-
-                                    break;
-                            }
-
-                        </div>
-                    }
-
-                </InstructionList>
-
+            <div class="section-description">
+                Programma dello schermo
             </div>
 
-        </main>
+        </div>
 
-    </section>
+        <InstructionList Instructions="Instructions" />
+
+    </main>
 
 </div>
 
 @code {
-    [Parameter]
-    public string DeviceId { get; set; } = "";
 
-    private void HandleDrop(DragEventArgs e)
+    [Parameter]
+    public string DeviceId { get; set; } = string.Empty;
+
+    private readonly List<InstructionItem> Instructions =
+        new()
+        {
+            new() { Type = "video" },
+            new() { Type = "image" },
+            new() { Type = "video" }
+        };
+
+    private void AddInstruction(string instructionType)
     {
-        if (string.IsNullOrWhiteSpace(
-            DraggedInstructionType))
+        if (string.IsNullOrWhiteSpace(instructionType))
         {
             return;
         }
@@ -134,34 +101,8 @@
         Instructions.Add(
             new InstructionItem
             {
-                Type = DraggedInstructionType
+                Type = instructionType
             });
-
-        DraggedInstructionType = null;
     }
 
-    private string? DraggedInstructionType;
-
-    private sealed class InstructionItem
-    {
-        public Guid Id { get; set; } = Guid.NewGuid();
-
-        public string Type { get; set; } = "";
-    }
-
-    private List<InstructionItem> Instructions = new()
-{
-    new() { Type = "video" },
-    new() { Type = "image" },
-    new() { Type = "video" }
-};
-
-    private void HandleInstructionDragStart(
-        string instructionType)
-    {
-        DraggedInstructionType = instructionType;
-    }
-
-   
 }
-

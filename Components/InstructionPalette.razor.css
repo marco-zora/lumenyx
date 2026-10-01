@@ -12,18 +12,6 @@
 }
 
 /* ========================================
-   TITOLO
-   ======================================== */
-
-.palette-title {
-    color: #6c757d;
-    font-size: 0.9rem;
-    font-weight: 700;
-    line-height: 1.2;
-    text-transform: uppercase;
-}
-
-/* ========================================
    CONTENITORE ELEMENTI
    ======================================== */
 
@@ -103,3 +91,29 @@
         flex-basis: auto;
     }
 }
+
+
+
+
+.palette-item {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    margin-bottom: .75rem;
+}
+
+.add-button {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 8px;
+    background: #2563eb;
+    color: white;
+    font-size: 1.4rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+    .add-button:hover {
+        background: #1d4ed8;
+    }

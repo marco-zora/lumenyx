@@ -1,12 +1,135 @@
-﻿<div class="instruction-list">
+﻿@using BlazorPWA.Components.Instructions
 
-    @ChildContent
+<div class="instruction-list-scroll">
+
+    <div class="instruction-list">
+
+        @if (Instructions.Count == 0)
+        {
+            <div class="instruction-list-empty">
+                Nessuna istruzione presente
+            </div>
+        }
+        else
+        {
+            @for (int i = 0; i < Instructions.Count; i++)
+            {
+                var instruction = Instructions[i];
+                var instructionNumber = i + 1;
+                var isFirst = i == 0;
+                var isLast = i == Instructions.Count - 1;
+
+                <div class="instruction-row"
+                     @key="instruction.Id">
+
+                    <div class="instruction-number"
+                         title="Istruzione @instructionNumber">
+
+                        @instructionNumber
+
+                    </div>
+
+                    <div class="instruction-toolbar">
+
+                        <button type="button"
+                                class="move-btn"
+                                title="Sposta l'istruzione verso l'alto"
+                                aria-label="Sposta l'istruzione @instructionNumber verso l'alto"
+                                disabled="@isFirst"
+                                @onclick="() => MoveUp(instruction)">
+
+                            <i class="bi bi-arrow-up"
+                               aria-hidden="true">
+                            </i>
+
+                        </button>
+
+                        <button type="button"
+                                class="move-btn"
+                                title="Sposta l'istruzione verso il basso"
+                                aria-label="Sposta l'istruzione @instructionNumber verso il basso"
+                                disabled="@isLast"
+                                @onclick="() => MoveDown(instruction)">
+
+                            <i class="bi bi-arrow-down"
+                               aria-hidden="true">
+                            </i>
+
+                        </button>
+
+                    </div>
+
+                    <div class="instruction-body">
+
+                        @switch (instruction.Type)
+                        {
+                            case "video":
+
+                                <VideoInstruction />
+
+                                break;
+
+                            case "image":
+
+                                <ImageInstruction />
+
+                                break;
+
+                            default:
+
+                                <div class="unsupported-instruction">
+
+                                    Tipo di istruzione non supportato:
+
+                                    <strong>
+                                        @instruction.Type
+                                    </strong>
+
+                                </div>
+
+                                break;
+                        }
+
+                    </div>
+
+                </div>
+            }
+        }
+
+    </div>
 
 </div>
 
 @code {
 
-    [Parameter]
-    public RenderFragment? ChildContent { get; set; }
+    [Parameter, EditorRequired]
+    public List<InstructionItem> Instructions { get; set; } = new();
+
+    private void MoveUp(InstructionItem instruction)
+    {
+        var currentIndex = Instructions.IndexOf(instruction);
+
+        if (currentIndex <= 0)
+        {
+            return;
+        }
+
+        Instructions.RemoveAt(currentIndex);
+        Instructions.Insert(currentIndex - 1, instruction);
+    }
+
+    private void MoveDown(InstructionItem instruction)
+    {
+        var currentIndex = Instructions.IndexOf(instruction);
+
+        if (currentIndex < 0 ||
+            currentIndex >= Instructions.Count - 1)
+        {
+            return;
+        }
+
+        Instructions.RemoveAt(currentIndex);
+        Instructions.Insert(currentIndex + 1, instruction);
+    }
 
 }

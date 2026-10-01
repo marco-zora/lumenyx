@@ -1,19 +1,258 @@
-/* CSS for InstructionList component */
+/* ========================================
+   LISTA DELLE ISTRUZIONI
+   ======================================== */
+
 .instruction-list {
     display: flex;
     flex-direction: column;
-    gap: 0.75rem;
     width: 100%;
-    padding: 1rem;
-    border: 0.12rem dashed #ced4da;
-    border-radius: 0.75rem;
-    background: #fafafa;
+    max-width: none;
+    min-width: 0;
+    gap: 0.75rem;
+    /* Nessun riquadro esterno */
+    margin: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
     box-sizing: border-box;
 }
 
-@media (max-width: 35rem) {
+.instruction-list-scroll {
+    width: 52rem;
+    max-width: 100%;
+    height: calc(100vh - 220px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 0.25rem;
+    scrollbar-gutter: stable;
+}
+    .instruction-list-scroll::-webkit-scrollbar {
+        width: 10px;
+    }
 
-    .instruction-list {
-        padding: 0.75rem;
+    .instruction-list-scroll::-webkit-scrollbar-track {
+        background: #f1f5f9;
+    }
+
+    .instruction-list-scroll::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 999px;
+    }
+
+        .instruction-list-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+/* ========================================
+   SINGOLA RIGA
+   ======================================== */
+
+.instruction-row {
+    display: grid;
+    grid-template-columns: 2.5rem auto minmax(0, 1fr);
+    align-items: center;
+    width: 100%;
+    min-width: 0;
+    gap: 0.65rem;
+}
+
+
+/* ========================================
+   NUMERO ISTRUZIONE
+   ======================================== */
+
+.instruction-number {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    color: #334155;
+    background-color: #f1f5f9;
+    border: 0.0625rem solid #dbe3ed;
+    border-radius: 0.7rem;
+    font-size: 0.9rem;
+    font-weight: 700;
+    line-height: 1;
+    box-sizing: border-box;
+    user-select: none;
+}
+
+
+/* ========================================
+   PULSANTI SPOSTAMENTO
+   ======================================== */
+
+.instruction-toolbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    flex-shrink: 0;
+    gap: 0.35rem;
+}
+
+.move-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2.5rem;
+    height: 2.5rem;
+    flex: 0 0 2.5rem;
+    padding: 0;
+    color: #ffffff;
+    background-color: #2563eb;
+    border: none;
+    border-radius: 0.7rem;
+    cursor: pointer;
+    box-shadow: 0 0.125rem 0.35rem rgba(37, 99, 235, 0.2);
+    transition: background-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease, opacity 0.15s ease;
+}
+
+    .move-btn:hover:not(:disabled) {
+        background-color: #1d4ed8;
+        box-shadow: 0 0.25rem 0.55rem rgba(37, 99, 235, 0.28);
+        transform: translateY(-0.0625rem);
+    }
+
+    .move-btn:active:not(:disabled) {
+        background-color: #1e40af;
+        box-shadow: none;
+        transform: translateY(0);
+    }
+
+    .move-btn:focus-visible {
+        outline: 0.1875rem solid rgba(37, 99, 235, 0.28);
+        outline-offset: 0.125rem;
+    }
+
+    .move-btn:disabled {
+        color: #94a3b8;
+        background-color: #e2e8f0;
+        box-shadow: none;
+        cursor: default;
+        opacity: 0.7;
+    }
+
+    .move-btn i {
+        font-size: 1rem;
+        line-height: 1;
+    }
+
+
+/* ========================================
+   CORPO E CARD ISTRUZIONE
+   ======================================== */
+
+.instruction-body {
+    width: 100%;
+    max-width: 48rem;
+    min-width: 0;
+}
+
+    /*
+   InstructionCard è un componente figlio.
+   ::deep consente al CSS isolato di InstructionList
+   di raggiungere l'elemento principale della card.
+*/
+
+    .instruction-body ::deep .instruction-card {
+        width: 100%;
+        max-width: 48rem;
+        box-sizing: border-box;
+    }
+
+
+/* ========================================
+   TIPO NON SUPPORTATO
+   ======================================== */
+
+.unsupported-instruction {
+    width: 100%;
+    max-width: 48rem;
+    padding: 0.75rem 1rem;
+    color: #991b1b;
+    background-color: #fef2f2;
+    border: 0.0625rem solid #fecaca;
+    border-radius: 0.7rem;
+    font-size: 0.9rem;
+    box-sizing: border-box;
+}
+
+
+/* ========================================
+   LISTA VUOTA
+   ======================================== */
+
+.instruction-list-empty {
+    width: 100%;
+    max-width: 48rem;
+    padding: 1rem;
+    color: #64748b;
+    background-color: #f8fafc;
+    border: 0.0625rem solid #e2e8f0;
+    border-radius: 0.75rem;
+    font-size: 0.9rem;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+
+/* ========================================
+   VIEWPORT STRETTE
+   ======================================== */
+
+@media (max-width: 48rem) {
+
+    .instruction-row {
+        grid-template-columns: 2.25rem auto minmax(0, 1fr);
+        gap: 0.45rem;
+    }
+
+    .instruction-number,
+    .move-btn {
+        width: 2.25rem;
+        height: 2.25rem;
+    }
+
+    .move-btn {
+        flex-basis: 2.25rem;
+        border-radius: 0.6rem;
+    }
+
+    .instruction-number {
+        font-size: 0.82rem;
+        border-radius: 0.6rem;
+    }
+
+    .instruction-toolbar {
+        gap: 0.25rem;
+    }
+}
+
+
+/* ========================================
+   TELEFONI MOLTO STRETTI
+   ======================================== */
+
+@media (max-width: 30rem) {
+
+    .instruction-row {
+        grid-template-columns: 2.25rem minmax(0, 1fr);
+        align-items: start;
+    }
+
+    .instruction-number {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .instruction-toolbar {
+        grid-column: 1;
+        grid-row: 2;
+        flex-direction: column;
+    }
+
+    .instruction-body {
+        grid-column: 2;
+        grid-row: 1 / span 2;
     }
 }

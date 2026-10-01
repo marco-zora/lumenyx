@@ -1,4 +1,70 @@
-﻿
+﻿<div class="instruction-palette">    
+
+    <div class="palette-items">
+
+        <div class="palette-item">
+
+            <button class="add-button"
+                    @onclick="AddVideo">
+                +
+            </button>
+
+            <InstructionCard Icon="bi-play-fill"
+                             Type="video">
+
+                <span>Video</span>
+
+            </InstructionCard>
+
+        </div>
+
+        <div class="palette-item">
+
+            <button class="add-button"
+                    @onclick="AddImage">
+                +
+            </button>
+
+            <InstructionCard Icon="bi-image"
+                             Type="image">
+
+                <span>Immagine</span>
+
+            </InstructionCard>
+
+        </div>
+
+    </div>
+
+</div>
+
+@code {
+
+    [Parameter]
+    public EventCallback<string> OnAddInstruction { get; set; }
+
+    private Task AddVideo()
+    {
+        return OnAddInstruction.InvokeAsync("video");
+    }
+
+    private Task AddImage()
+    {
+        return OnAddInstruction.InvokeAsync("image");
+    }
+}
+
+
+
+
+
+
+
+
+
+@*
+
+
 <div class="instruction-palette">
 
     <div class="palette-title">
@@ -63,3 +129,5 @@
         return OnInstructionDragEnd.InvokeAsync();
     }
 }
+
+*@
