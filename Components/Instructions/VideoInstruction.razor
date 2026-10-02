@@ -1,6 +1,4 @@
-﻿@using System.Net.Http.Json
-@using BlazorPWA.Components
-@inject HttpClient Http
+﻿@inject BlazorPWA.Services.IMediaService MediaService
 
 <InstructionCard>
 
@@ -11,6 +9,9 @@
                  class="video-thumbnail"
                  alt="Thumbnail del video selezionato" />
         }
+
+    
+
         else
         {
             <div class="video-thumbnail-placeholder">
@@ -174,6 +175,12 @@
     [Parameter]
     public EventCallback OnChangeType { get; set; }
 
+    [Parameter]
+    public bool OpenMenuOnRender { get; set; }
+
+    [Parameter]
+    public EventCallback<bool> OpenMenuOnRenderChanged { get; set; }
+
     private List<MediaItem> Videos { get; set; } = new();
     private string SelectedVideoName { get; set; } = string.Empty;
     private string SelectedThumbnailUrl { get; set; } = string.Empty;
@@ -184,6 +191,7 @@
     private bool VideosLoaded { get; set; }
     private string? LoadError { get; set; }
     private double SelectedDurationSeconds;
+    private bool _openingForInsert;
 
 
     
@@ -215,15 +223,45 @@
     {
         ShowVideoList = true;
 
-        if (!VideosLoaded)
+        // Ensure latest media.json is fetched before showing the list
+        try
         {
-            await LoadVideosAsync();
+            await MediaService.RefreshAsync();
         }
+        catch
+        {
+            // ignore refresh errors; LoadVideosAsync will surface a load error
+        }
+
+        // Always reload the local list from the service after refresh
+        await LoadVideosAsync();
     }
 
     private void CloseVideoList()
     {
         ShowVideoList = false;
+    }
+
+    // Expose a public API so parent can open the menu programmatically
+    public async Task OpenMenuAsync(bool forInsert = false)
+    {
+        _openingForInsert = forInsert;
+
+        ShowMenu = true;
+        ShowVideoList = true;
+
+        // Ensure latest media.json is fetched before showing the list
+        try
+        {
+            await MediaService.RefreshAsync();
+        }
+        catch
+        {
+            // ignore refresh errors; LoadVideosAsync will surface a load error
+        }
+
+        await LoadVideosAsync();
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task LoadVideosAsync()
@@ -233,8 +271,7 @@
 
         try
         {
-            var media = await Http.GetFromJsonAsync<List<MediaItem>>(
-                "media/media.json");
+            var media = await MediaService.GetAllAsync();
 
             Videos = media?
                 .Where(item =>
@@ -292,6 +329,17 @@
         CloseMenu();
 
         await SelectedVideoIdChanged.InvokeAsync(SelectedVideoId);
+
+        // If this menu was opened as part of an insert flow, clear the flag on the parent
+        if (_openingForInsert)
+        {
+            _openingForInsert = false;
+            try
+            {
+                await OpenMenuOnRenderChanged.InvokeAsync(false);
+            }
+            catch { }
+        }
     }
 
     private async Task ChangeType()
@@ -306,5 +354,12 @@
         return TimeSpan
             .FromSeconds(seconds)
             .ToString(@"mm\:ss");
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // If the parent set OpenMenuOnRender on the bound InstructionItem, open the menu now
+        // We don't have direct access to the InstructionItem here; parent will set ShowMenu via binding when appropriate.
+        await base.OnAfterRenderAsync(firstRender);
     }
 }

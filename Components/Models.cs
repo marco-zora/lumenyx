@@ -17,6 +17,8 @@
         public string Type { get; set; } = "";
         public string? MediaId { get; set; }
         public int DurationSeconds { get; set; } = 5;
+        // When true, the instruction component should open its edit menu when rendered
+        public bool OpenMenuOnRender { get; set; } = false;
     }
 
     public class MediaItem

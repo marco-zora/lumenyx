@@ -1,15 +1,20 @@
 ﻿@page "/instruction-gallery"
 
+@using BlazorPWA.Components
+
 
 <h3>Test immagine</h3>
 
-media/video_frame_playback.png
-
-<img src="media/video_frame_playback.png" />;
+<img src="media/video_frame_playback.png" alt="Anteprima video" />
 
 <h3>Nuova VideoInstruction</h3>
 
 <VideoInstruction />
+
+<h3>Lista istruzioni (anteprima)</h3>
+
+@* Mostra InstructionList con dati di esempio per verificare l'aspetto finale *@
+<InstructionList Instructions="Instructions" />
 
 <style>
 
@@ -22,3 +27,12 @@ media/video_frame_playback.png
     }
 
 </style>
+
+@code {
+    private List<InstructionItem> Instructions { get; set; } = new()
+    {
+        new InstructionItem { Type = "video", MediaId = null, DurationSeconds = 12 },
+        new InstructionItem { Type = "image", MediaId = null, DurationSeconds = 5 },
+        new InstructionItem { Type = "video", MediaId = null, DurationSeconds = 8 }
+    };
+}

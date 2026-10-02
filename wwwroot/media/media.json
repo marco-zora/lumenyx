@@ -16,7 +16,7 @@
     "durationSeconds": 45
   },
   {
-    "id": "2",
+    "id": "3",
     "type": "video",
     "name": "Spiaggia",
     "url": "/media/VIDEO-004.mp4",
@@ -25,7 +25,7 @@
   },
 
   {
-    "id": "2",
+    "id": "4",
     "type": "image",
     "name": "Offerta Luglio",
     "url": "/media/offerta-luglio.png",
@@ -33,11 +33,19 @@
     "durationSeconds": 50
   },
   {
-    "id": "3",
+    "id": "5",
     "type": "pdf",
     "name": "Listino 2026",
     "url": "/media/listino.pdf",
     "thumbnailUrl": "media/video_frame_playback.png",
     "durationSeconds": 60
+  },
+  {
+    "id": "6",
+    "type": "video",
+    "name": "Spiaggia Numero 2",
+    "url": "/media/VIDEO-004.mp4",
+    "thumbnailUrl": "media/image.jpg",
+    "durationSeconds": 50
   }
 ]

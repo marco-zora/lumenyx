@@ -1,54 +1,70 @@
 ﻿@page "/program/{DeviceId}"
+@using System.Collections.ObjectModel
+@using System.Collections.Specialized
 
-@using BlazorPWA.Components.Instructions
 
 <div class="program-layout">
 
-    <div class="left-column">
+    <aside class="left-column">
 
         <section class="preview-panel">
 
+            <div class="preview-toolbar">
+                <div class="device-name">Dispositivo: @DeviceId</div>
+                <div class="preview-controls">
+                    <button class="btn btn-sm btn-outline-light" @onclick="@(async () => await PlayPreview())">Play</button>
+                </div>
+            <div class="debug-info" style="margin-top:0.5rem;color:#94a3b8;font-size:0.8rem;">
+                <div>Debug: IP=@(_lastPlayedIndex) ended=@(_lastEnded?.ToString() ?? "-")</div>
+                <div>ResolvedUrl=@(_lastResolvedUrl ?? "-") Found=@(_lastMediaFound)</div>
+            </div>
+            </div>
+
             <div class="preview-frame">
 
-                <div class="preview-content">
+                @if (!string.IsNullOrWhiteSpace(PreviewVideoUrl))
+                {
+                    <video class="preview-video" src="@PreviewVideoUrl" @ref="_previewVideoRef" playsinline controls muted style="width:100%;height:100%;object-fit:cover;border-radius:0.45rem;">
+                        Your browser does not support the video tag.
+                    </video>
+                }
+                else
+                {
+                    <div class="preview-content">
 
-                    <i class="bi bi-display preview-icon"
-                       aria-hidden="true">
-                    </i>
+                        <i class="bi bi-display preview-icon" aria-hidden="true"></i>
 
-                    <div class="preview-title">
-                        Anteprima schermo
+                        <div class="preview-title">Anteprima schermo</div>
+
+                        <div class="preview-subtitle">Formato 16:9</div>
+
                     </div>
-
-                    <div class="preview-subtitle">
-                        Formato 16:9
-                    </div>
-
-                </div>
+                }
 
             </div>
 
+            <div class="preview-actions">
+                <button class="btn btn-primary btn-sm" @onclick="@(async () => await PlayPreview())">
+                    <i class="bi bi-play-fill" aria-hidden="true"></i>
+                    <span class="visually-hidden">Play</span>
+                </button>
+
+                <button class="btn btn-secondary btn-sm" @onclick="@(async () => await ReplayPreview())" title="Replay prima istruzione">
+                    <i class="bi bi-arrow-clockwise" aria-hidden="true"></i>
+                    <span class="visually-hidden">Replay</span>
+                </button>
+
+                <button class="btn btn-outline-secondary btn-sm" @onclick="StopPreview">
+                    <i class="bi bi-stop-fill" aria-hidden="true"></i>
+                    <span class="visually-hidden">Stop</span>
+                </button>
+            </div>
+            @* preview video moved inside preview-frame *@
         </section>
 
-        <aside class="palette-panel">
+        <!-- InstructionPalette removed from ProgramView -->
 
-            <div class="section-heading">
-
-                <div class="section-title">
-                    Istruzioni disponibili
-                </div>
-
-                <div class="section-description">
-                    Premi + per aggiungere una istruzione
-                </div>
-
-            </div>
-
-            <InstructionPalette OnAddInstruction="AddInstruction" />
-
-        </aside>
-
-    </div>
+    </aside>
 
     <main class="sequence-panel">
 
@@ -56,40 +72,239 @@
 
             <div class="sequence-title-row">
 
-                <div class="section-title">
-                    Sequenza
-                </div>
+                <div class="section-title">Sequenza</div>
 
-                <div class="instruction-counter">
-                    @Instructions.Count istruzioni
-                </div>
+                <div class="instruction-counter">@Instructions.Count istruzioni</div>
 
             </div>
 
-            <div class="section-description">
-                Programma dello schermo
-            </div>
+            <div class="section-description">Programma dello schermo</div>
 
         </div>
 
-        <InstructionList Instructions="Instructions" />
+        <div class="sequence-body">
+            <InstructionList Instructions="Instructions" @ref="_instructionListRef" />
+        </div>
 
     </main>
 
 </div>
+
+@inject IJSRuntime Js
+@inject BlazorPWA.Services.IMediaService MediaService
 
 @code {
 
     [Parameter]
     public string DeviceId { get; set; } = string.Empty;
 
-    private readonly List<InstructionItem> Instructions =
-        new()
+    // Use a dynamic collection supplied to the InstructionList; start empty so
+    // the sequence is always the current list managed in the UI.
+    private ObservableCollection<InstructionItem> Instructions { get; } =
+        new ObservableCollection<InstructionItem>();
+
+    private CancellationTokenSource? _playbackCts;
+    private bool _isPlaying;
+    private int? _lastPlayedIndex;
+    private bool? _lastEnded;
+    private string? _lastResolvedUrl;
+    private bool _lastMediaFound;
+
+    protected override void OnInitialized()
+    {
+        // Ensure the UI (instruction counter etc.) updates when the shared collection changes
+        Instructions.CollectionChanged += OnInstructionsChanged;
+    }
+
+    private void OnInstructionsChanged(object? sender, NotifyCollectionChangedEventArgs e)
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    private async Task PlayPreview()
+    {
+        if (Instructions.Count == 0) return;
+
+        // determine start index: selected or 0
+        var sel = _instructionListRef?.GetSelectedIndex() ?? -1;
+        var startIdx = sel >= 0 ? sel : 0;
+
+        // if already playing, stop and restart
+        if (_isPlaying)
         {
-            new() { Type = "video" },
-            new() { Type = "image" },
-            new() { Type = "video" }
-        };
+            _playbackCts?.Cancel();
+            await Task.Yield();
+        }
+
+        _playbackCts = new CancellationTokenSource();
+        _isPlaying = true;
+
+        // subscribe to collection changes to react dynamically
+        void OnCollectionChanged(object? s, NotifyCollectionChangedEventArgs e)
+        {
+            // trigger UI refresh
+            InvokeAsync(StateHasChanged);
+        }
+
+        Instructions.CollectionChanged += OnCollectionChanged;
+
+        try
+        {
+            await PlaySequenceAsync(startIdx, _playbackCts.Token);
+        }
+        finally
+        {
+            Instructions.CollectionChanged -= OnCollectionChanged;
+            _isPlaying = false;
+            _playbackCts?.Dispose();
+            _playbackCts = null;
+        }
+    }
+
+    public void Dispose()
+    {
+        try
+        {
+            Instructions.CollectionChanged -= OnInstructionsChanged;
+        }
+        catch { }
+    }
+
+    private async Task PlaySequenceAsync(int startIndex, CancellationToken ct)
+    {
+        int idx = startIndex;
+
+        while (idx < Instructions.Count)
+        {
+            if (ct.IsCancellationRequested) break;
+
+            if (idx < 0 || idx >= Instructions.Count) break;
+
+            var inst = Instructions[idx];
+
+            // select current instruction in UI
+            _instructionListRef?.SelectIndex(idx);
+
+            if (inst.Type == "video" && !string.IsNullOrWhiteSpace(inst.MediaId))
+            {
+                // Resolve media metadata from MediaService
+                var media = await MediaService.GetByIdAsync(inst.MediaId);
+
+                if (media != null && string.Equals(media.Type, "video", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    PreviewVideoUrl = media.Url;
+                }
+                else
+                {
+                    // fallback: use raw MediaId as url
+                    PreviewVideoUrl = inst.MediaId;
+                }
+
+                // update debug fields before rendering so UI shows them immediately
+                _lastPlayedIndex = idx;
+                _lastResolvedUrl = PreviewVideoUrl;
+                _lastMediaFound = media != null;
+
+                await InvokeAsync(StateHasChanged);
+
+                // small delay to ensure element updates
+                await Task.Yield();
+                await Task.Delay(80, CancellationToken.None);
+
+                // play current video and wait for end/pause
+                bool ended = false;
+                try
+                {
+                    ended = await Js.InvokeAsync<bool>("videoInterop.playAndWaitWithSrc", _previewVideoRef, PreviewVideoUrl);
+                    _lastEnded = ended;
+                    await InvokeAsync(StateHasChanged);
+                }
+                catch
+                {
+                    ended = false;
+                }
+
+                if (ct.IsCancellationRequested) break;
+
+                if (ended)
+                {
+                    // move to next instruction immediately and continue loop
+                    idx++;
+                    continue;
+                }
+                else
+                {
+                    // playback was paused/stopped or errored: stop sequence
+                    break;
+                }
+            }
+            else if (inst.Type == "image")
+            {
+                // Show image in preview if possible
+                var media = await MediaService.GetByIdAsync(inst.MediaId ?? string.Empty);
+                if (media != null && string.Equals(media.Type, "image", System.StringComparison.OrdinalIgnoreCase))
+                {
+                    PreviewVideoUrl = media.Url;
+                    await InvokeAsync(StateHasChanged);
+                }
+
+                // wait for the duration specified in the instruction
+                try
+                {
+                    var delayMs = Math.Max(0, inst.DurationSeconds) * 1000;
+                    await Task.Delay(delayMs, ct);
+                }
+                catch (OperationCanceledException) { break; }
+
+                idx++;
+                continue;
+            }
+            else
+            {
+                // Unsupported: skip
+                idx++;
+                continue;
+            }
+        }
+    }
+
+    private async Task ReplayPreview()
+    {
+        if (Instructions.Count == 0) return;
+
+        // Stop any running playback and restart from instruction 0
+        try { _playbackCts?.Cancel(); } catch { }
+
+        // select first instruction
+        _instructionListRef?.SelectIndex(0);
+
+        // start sequence from 0
+        _playbackCts = new CancellationTokenSource();
+        _isPlaying = true;
+        try
+        {
+            await PlaySequenceAsync(0, _playbackCts.Token);
+        }
+        finally
+        {
+            _isPlaying = false;
+            _playbackCts?.Dispose();
+            _playbackCts = null;
+        }
+    }
+
+    private void StopPreview()
+    {
+        // cancel running sequence
+        try { _playbackCts?.Cancel(); } catch { }
+
+        PreviewVideoUrl = null;
+        try { _ = Js.InvokeVoidAsync("videoInterop.pauseVideo", _previewVideoRef); } catch { }
+    }
+
+    private ElementReference _previewVideoRef;
+    private Components.InstructionList? _instructionListRef;
+    private string? PreviewVideoUrl { get; set; }
 
     private void AddInstruction(string instructionType)
     {

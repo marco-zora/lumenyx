@@ -1,4 +1,4 @@
-﻿@inject HttpClient Http
+﻿@inject BlazorPWA.Services.IMediaService MediaService
 
 
 <InstructionCard Icon="bi-image"
@@ -39,17 +39,24 @@
 
     protected override async Task OnInitializedAsync()
     {
-        var media =
-            await Http.GetFromJsonAsync<List<MediaItem>>(
-                "media/media.json");
+        // refresh the media list each time the image menu may be opened
+        try
+        {
+            await MediaService.RefreshAsync();
+        }
+        catch
+        {
+            // ignore refresh errors
+        }
+
+        var media = await MediaService.GetAllAsync();
 
         Images = media?
-            .Where(x => x.Type == "image")
+            .Where(x => string.Equals(x.Type, "image", System.StringComparison.OrdinalIgnoreCase))
             .ToList()
             ?? new();
 
-        if (Images.Count > 0 &&
-            string.IsNullOrWhiteSpace(SelectedMediaId))
+        if (Images.Count > 0 && string.IsNullOrWhiteSpace(SelectedMediaId))
         {
             SelectedMediaId = Images[0].Id;
         }

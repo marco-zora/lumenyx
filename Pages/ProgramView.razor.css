@@ -26,6 +26,37 @@
     gap: 1.25rem;
 }
 
+.preview-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.5rem;
+    color: #0f172a;
+    font-weight: 600;
+    padding: 0.35rem 0.5rem;
+}
+
+.preview-toolbar .device-name {
+    font-size: 0.95rem;
+}
+
+.preview-toolbar .preview-controls button {
+    font-weight: 700;
+}
+
+.preview-actions {
+    display: flex;
+    gap: 0.5rem;
+    padding-top: 0.6rem;
+    padding-bottom: 0.2rem;
+}
+
+.preview-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
 
 /* ========================================
    PREVIEW
@@ -111,6 +142,19 @@
     min-height: 0;
     overflow: hidden;
     gap: 0.75rem;
+}
+
+.sequence-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.sequence-body ::deep .instruction-list-scroll {
+    /* ensure the internal list uses available height inside sequence-body */
+    height: 100% !important;
 }
 
 

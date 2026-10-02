@@ -1,6 +1,45 @@
-﻿@using BlazorPWA.Components.Instructions
+﻿@using BlazorPWA.Components
+@using Microsoft.AspNetCore.Components.Web
+@inject IJSRuntime Js
 
-<div class="instruction-list-scroll">
+<div class="instruction-list-scroll" @ref="_scrollRef" style="@(AvailableHeightPx>0 ? $"height:{AvailableHeightPx}px;" : null)">
+
+    <div class="instruction-list-header" style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.5rem;">
+        <div style="position:relative;display:flex;align-items:center;gap:0.5rem;">
+            <button class="move-btn" title="Aggiungi istruzione" @onclick="ToggleAddMenu" aria-expanded="@ShowAddMenu">
+                <i class="bi bi-plus"></i>
+            </button>
+
+            @if (ShowAddMenu)
+            {
+                <div class="add-menu-overlay" @onclick="CloseAddMenu"></div>
+
+                <div class="add-menu" @onclick:stopPropagation="true">
+                    @foreach (var t in AvailableTypes)
+                    {
+                        <button class="add-menu-item" @onclick="() => AddNewInstruction(t)" title="Aggiungi @GetLabel(t)">
+                            <i class="@GetIconClass(t) add-menu-icon" aria-hidden="true"></i>
+                            <span class="add-menu-label">@GetLabel(t)</span>
+                        </button>
+                    }
+                </div>
+            }
+        </div>
+        <button class="move-btn" title="Sposta su" @onclick="MoveSelectedUp" disabled="@(SelectedInstructionIndex <= 0)">
+            <i class="bi bi-arrow-up"></i>
+        </button>
+
+        <button class="move-btn" title="Sposta giù" @onclick="MoveSelectedDown" disabled="@(SelectedInstructionIndex < 0 || SelectedInstructionIndex >= Instructions.Count - 1)">
+            <i class="bi bi-arrow-down"></i>
+        </button>
+
+        <button class="delete-btn" title="Elimina istruzione selezionata" @onclick="DeleteSelected" disabled="@(SelectedInstructionIndex < 0)">
+            <i class="bi bi-trash"></i>
+        </button>
+
+        <div style="flex:1"></div>
+        <div style="color:#64748b;font-size:0.9rem">Seleziona una istruzione per usare i comandi</div>
+    </div>
 
     <div class="instruction-list">
 
@@ -18,9 +57,14 @@
                 var instructionNumber = i + 1;
                 var isFirst = i == 0;
                 var isLast = i == Instructions.Count - 1;
+                var isSelected = SelectedInstructionId == instruction.Id;
 
-                <div class="instruction-row"
-                     @key="instruction.Id">
+                <div class="instruction-row @(isSelected ? "selected" : null)"
+                     @key="instruction.Id"
+                     @onclick="() => SelectInstruction(instruction)"
+                     role="button"
+                     tabindex="0"
+                     @onkeydown="(e) => OnRowKeyDown(e, instruction)">
 
                     <div class="instruction-number"
                          title="Istruzione @instructionNumber">
@@ -29,61 +73,21 @@
 
                     </div>
 
-                    <div class="instruction-toolbar">
-
-                        <button type="button"
-                                class="move-btn"
-                                title="Sposta l'istruzione verso l'alto"
-                                aria-label="Sposta l'istruzione @instructionNumber verso l'alto"
-                                disabled="@isFirst"
-                                @onclick="() => MoveUp(instruction)">
-
-                            <i class="bi bi-arrow-up"
-                               aria-hidden="true">
-                            </i>
-
-                        </button>
-
-                        <button type="button"
-                                class="move-btn"
-                                title="Sposta l'istruzione verso il basso"
-                                aria-label="Sposta l'istruzione @instructionNumber verso il basso"
-                                disabled="@isLast"
-                                @onclick="() => MoveDown(instruction)">
-
-                            <i class="bi bi-arrow-down"
-                               aria-hidden="true">
-                            </i>
-
-                        </button>
-
-
-
-                        <button type="button"
-                                class="delete-btn"
-                                title="Elimina istruzione"
-                                aria-label="Elimina istruzione"
-                                @onclick="() => DeleteInstruction(instruction)">
-
-                            <i class="bi bi-trash"></i>
-
-                        </button>
-
-                    </div>
+                    @* Toolbar per riga rimossa: comandi centrali ora disponibili nella toolbar superiore *@
 
                     <div class="instruction-body">
 
                         @switch (instruction.Type)
                         {
-                            case "video":
+                        case "video":
 
-                                <VideoInstruction />
+                                <VideoInstruction @bind-SelectedVideoId="instruction.MediaId" @bind-OpenMenuOnRender="instruction.OpenMenuOnRender" />
 
                                 break;
 
                             case "image":
 
-                                <ImageInstruction />
+                                <ImageInstruction @bind-SelectedMediaId="instruction.MediaId" @bind-DurationSeconds="instruction.DurationSeconds" />
 
                                 break;
 
@@ -115,7 +119,205 @@
 @code {
 
     [Parameter, EditorRequired]
-    public List<InstructionItem> Instructions { get; set; } = new();
+    public IList<InstructionItem> Instructions { get; set; } = new List<InstructionItem>();
+
+    private Guid SelectedInstructionId { get; set; } = Guid.Empty;
+
+    private int SelectedInstructionIndex
+    {
+        get
+        {
+            if (Instructions == null) return -1;
+            for (int i = 0; i < Instructions.Count; i++)
+            {
+                if (Instructions[i].Id == SelectedInstructionId) return i;
+            }
+            return -1;
+        }
+    }
+
+    // JS interop: calcola altezza disponibile e imposta altezza del pannello
+    private ElementReference _scrollRef;
+    private DotNetObjectReference<InstructionList>? _dotNetRef;
+    private int AvailableHeightPx { get; set; }
+    private string? _listenerId;
+
+    // Public helper for parent components to select an instruction by index
+    public void SelectIndex(int index)
+    {
+        if (index < 0 || index >= Instructions.Count) return;
+        SelectedInstructionId = Instructions[index].Id;
+        StateHasChanged();
+    }
+
+    // Public helpers to get selection state
+    public int GetSelectedIndex() => SelectedInstructionIndex;
+
+    public InstructionItem? GetSelectedInstruction()
+    {
+        var idx = SelectedInstructionIndex;
+        return idx >= 0 && idx < Instructions.Count ? Instructions[idx] : null;
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            _dotNetRef = DotNetObjectReference.Create(this);
+            try
+            {
+                _listenerId = await Js.InvokeAsync<string>("instructionList.initInstructionList", _dotNetRef, _scrollRef, 80);
+            }
+            catch
+            {
+                // ignore
+            }
+        }
+    }
+
+    [JSInvokable]
+    public Task SetAvailableHeight(int px)
+    {
+        AvailableHeightPx = px;
+        InvokeAsync(StateHasChanged);
+        return Task.CompletedTask;
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        try
+        {
+            await Js.InvokeVoidAsync("instructionList.disposeInstructionList", _listenerId);
+        }
+        catch
+        {
+        }
+
+        _dotNetRef?.Dispose();
+    }
+
+    // Aggiunta istruzione - stato e metodi per il menu +
+    private bool ShowAddMenu { get; set; }
+    private string[] AvailableTypes { get; } = new[] { "video", "image" };
+
+    private void ToggleAddMenu()
+    {
+        ShowAddMenu = !ShowAddMenu;
+    }
+
+    private void CloseAddMenu()
+    {
+        ShowAddMenu = false;
+    }
+
+    private void AddNewInstruction(string type)
+    {
+        var newItem = new InstructionItem { Type = type };
+
+        var idx = SelectedInstructionIndex;
+        if (idx >= 0)
+        {
+            Instructions.Insert(idx + 1, newItem);
+        }
+        else
+        {
+            Instructions.Add(newItem);
+        }
+
+        // Select new item
+        SelectedInstructionId = newItem.Id;
+
+        // If video type, request the component to open its menu on render
+        if (type == "video")
+        {
+            newItem.OpenMenuOnRender = true;
+        }
+
+        ShowAddMenu = false;
+    }
+
+    // Type metadata (icon + label)
+    private readonly Dictionary<string, (string IconClass, string Label)> TypeInfo = new()
+    {
+        ["video"] = ("bi-play-circle", "Video"),
+        ["image"] = ("bi-image", "Immagine")
+    };
+
+    private string GetIconClass(string type) => TypeInfo.TryGetValue(type, out var v) ? v.IconClass : "bi-file-earmark";
+
+    private string GetLabel(string type) => TypeInfo.TryGetValue(type, out var v) ? v.Label : type;
+
+    private void SelectInstruction(InstructionItem instruction)
+    {
+        SelectedInstructionId = instruction.Id;
+    }
+
+    private void OnRowKeyDown(KeyboardEventArgs e, InstructionItem instruction)
+    {
+        // Support Enter/Space to select, Delete to remove, Arrow keys to move
+        if (e.Key == "Enter" || e.Key == " ")
+        {
+            SelectInstruction(instruction);
+        }
+        else if (e.Key == "Delete")
+        {
+            DeleteInstruction(instruction);
+        }
+        else if (e.Key == "ArrowUp")
+        {
+            MoveUp(instruction);
+        }
+        else if (e.Key == "ArrowDown")
+        {
+            MoveDown(instruction);
+        }
+    }
+
+    private void MoveSelectedUp()
+    {
+        var idx = SelectedInstructionIndex;
+        if (idx > 0)
+        {
+            var item = Instructions[idx];
+            Instructions.RemoveAt(idx);
+            Instructions.Insert(idx - 1, item);
+            SelectedInstructionId = item.Id;
+        }
+    }
+
+    private void MoveSelectedDown()
+    {
+        var idx = SelectedInstructionIndex;
+        if (idx >= 0 && idx < Instructions.Count - 1)
+        {
+            var item = Instructions[idx];
+            Instructions.RemoveAt(idx);
+            Instructions.Insert(idx + 1, item);
+            SelectedInstructionId = item.Id;
+        }
+    }
+
+    private void DeleteSelected()
+    {
+        var idx = SelectedInstructionIndex;
+        if (idx < 0) return;
+
+        Instructions.RemoveAt(idx);
+
+        // Adjust selection to next item or previous if none
+        if (idx < Instructions.Count)
+        {
+            SelectedInstructionId = Instructions[idx].Id;
+        }
+        else if (idx - 1 >= 0)
+        {
+            SelectedInstructionId = Instructions[idx - 1].Id;
+        }
+        else
+        {
+            SelectedInstructionId = Guid.Empty;
+        }
+    }
 
     private void MoveUp(InstructionItem instruction)
     {
@@ -146,7 +348,25 @@
 
     private void DeleteInstruction(InstructionItem instruction)
     {
+        var idx = Instructions.IndexOf(instruction);
         Instructions.Remove(instruction);
+
+        // If the deleted instruction was selected, adjust selection
+        if (SelectedInstructionId == instruction.Id)
+        {
+            if (idx < Instructions.Count)
+            {
+                SelectedInstructionId = Instructions[idx].Id;
+            }
+            else if (idx - 1 >= 0)
+            {
+                SelectedInstructionId = Instructions[idx - 1].Id;
+            }
+            else
+            {
+                SelectedInstructionId = Guid.Empty;
+            }
+        }
     }
 
 }
