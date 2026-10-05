@@ -81,81 +81,66 @@
                     }
                     else
                     {
-                        <div class="video-list-header">
-                            <button type="button"
-                                    class="video-back-btn"
-                                    title="Torna al menu"
-                                    aria-label="Torna al menu"
-                                    @onclick="CloseVideoList">
-                                <i class="bi bi-arrow-left"></i>
-                            </button>
-
-                            <span>Seleziona video</span>
-                        </div>
-
-                        <div class="video-list">
-                            @if (IsLoadingVideos)
-                            {
-                                <div class="video-list-message">
-                                    Caricamento video...
-                                </div>
-                            }
-                            else if (!string.IsNullOrWhiteSpace(LoadError))
-                            {
-                                <div class="video-list-message video-list-error">
-                                    @LoadError
-                                </div>
-                            }
-                            else if (Videos.Count == 0)
-                            {
-                                <div class="video-list-message">
-                                    Nessun video disponibile
-                                </div>
-                            }
-                            else
-                            {
-                                @foreach (var video in Videos)
-                                {
-                                    bool isSelected = video.Id == SelectedVideoId;
-
-                                    <button type="button"
-                                            class="video-list-item @(isSelected ? "selected" : null)"
-                                            @onclick="() => SelectVideo(video)">
-
-                                        <div class="video-list-thumbnail">
-                                            @if (!string.IsNullOrWhiteSpace(video.ThumbnailUrl))
-                                            {
-                                                <img src="@video.ThumbnailUrl"
-                                                     class="video-list-thumbnail-image"
-                                                     alt="@($"Thumbnail di {video.Name}")"
-                                                     loading="lazy" />
-                                            }
-                                            else
-                                            {
-                                                <div class="video-list-thumbnail-placeholder">
-                                                    <i class="bi bi-play-fill"></i>
-                                                </div>
-                                            }
-                                        </div>
-
-                                        <div class="video-list-info">
-                                            <div class="video-list-name">
-                                                @video.Name
-                                            </div>
-
-                                            <div class="video-list-type">
-                                                Video
-                                            </div>
-                                        </div>
-
-                                        @if (isSelected)
-                                        {
-                                            <i class="bi bi-check-lg video-selected-icon"></i>
-                                        }
-
+                        @* Render the video picker as a fixed overlay so it remains visible on small screens *@
+                        <!-- overlay without dimming -->
+                        <div class="video-picker-overlay" @onclick="CloseVideoList" style="position:fixed;inset:0;display:flex;align-items:flex-start;justify-content:center;padding-top:4.5rem;z-index:1200;pointer-events:auto;">
+                            <div class="video-picker" @onclick:stopPropagation="true" style="width:320px;max-height:calc(100vh - 6rem);overflow:auto;background:white;border-radius:8px;border:1px solid #e6eef6;box-shadow:0 8px 28px rgba(16,24,40,0.12);">
+                                <div class="video-list-header" style="display:flex;align-items:center;padding:0.5rem;border-bottom:1px solid #eef6fb;">
+                                    <button type="button" class="video-back-btn" title="Torna al menu" aria-label="Torna al menu" @onclick="CloseVideoList">
+                                        <i class="bi bi-arrow-left"></i>
                                     </button>
-                                }
-                            }
+                                    <div style="flex:1;text-align:center;font-weight:600;">Seleziona video</div>
+                                </div>
+
+                                <div style="padding:0.5rem;">
+                                    @if (IsLoadingVideos)
+                                    {
+                                        <div class="video-list-message">Caricamento video...</div>
+                                    }
+                                    else if (!string.IsNullOrWhiteSpace(LoadError))
+                                    {
+                                        <div class="video-list-message video-list-error">@LoadError</div>
+                                    }
+                                    else if (Videos.Count == 0)
+                                    {
+                                        <div class="video-list-message">Nessun video disponibile</div>
+                                    }
+                                    else
+                                    {
+                                        <div style="display:flex;flex-direction:column;gap:0.25rem;">
+                                        @foreach (var video in Videos)
+                                        {
+                                            bool isSelected = video.Id == SelectedVideoId;
+
+                                            <button type="button" class="video-list-item @(isSelected ? "selected" : null)" @onclick="() => SelectVideo(video)" style="display:flex;align-items:center;padding:0.4rem;border-radius:6px;border:1px solid transparent;">
+
+                                                <div class="video-list-thumbnail" style="width:48px;height:36px;overflow:hidden;border-radius:6px;margin-right:0.5rem;flex:0 0 48px;">
+                                                    @if (!string.IsNullOrWhiteSpace(video.ThumbnailUrl))
+                                                    {
+                                                        <img src="@video.ThumbnailUrl" style="width:100%;height:100%;object-fit:cover;" alt="@($"Thumbnail di {video.Name}")" loading="lazy" />
+                                                    }
+                                                    else
+                                                    {
+                                                        <div class="video-list-thumbnail-placeholder"><i class="bi bi-play-fill"></i></div>
+                                                    }
+                                                </div>
+
+                                                <div style="flex:1;text-align:left;">
+                                                    <div style="font-weight:600;">@video.Name</div>
+                                                    <div style="font-size:0.85rem;color:#64748b;">Video · @TimeSpan.FromSeconds(video.DurationSeconds).ToString(@"mm\:ss")</div>
+                                                </div>
+
+                                                @if (isSelected)
+                                                {
+                                                    <i class="bi bi-check-lg video-selected-icon" style="margin-left:0.5rem;color:#0ea5a2;"></i>
+                                                }
+
+                                            </button>
+                                        }
+                                        </div>
+                                    }
+                                </div>
+                            </div>
                         </div>
                     }
                 </div>
@@ -180,6 +165,17 @@
 
     [Parameter]
     public EventCallback<bool> OpenMenuOnRenderChanged { get; set; }
+
+    // Id of the instruction this component represents (set by parent)
+    [Parameter]
+    public Guid InstructionId { get; set; }
+
+    /// <summary>
+    /// Invoked when the component was opened for insert and the user cancels without selecting a video.
+    /// The parent should remove the corresponding InstructionItem.
+    /// </summary>
+    [Parameter]
+    public EventCallback<Guid> RemoveRequested { get; set; }
 
     private List<MediaItem> Videos { get; set; } = new();
     private string SelectedVideoName { get; set; } = string.Empty;
@@ -239,7 +235,14 @@
 
     private void CloseVideoList()
     {
+        // If this menu was opened as part of an insert flow and no video selected,
+        // notify parent to remove the placeholder instruction.
         ShowVideoList = false;
+        if (_openingForInsert && string.IsNullOrWhiteSpace(SelectedVideoId))
+        {
+            _openingForInsert = false;
+            _ = RemoveRequested.InvokeAsync(InstructionId);
+        }
     }
 
     // Expose a public API so parent can open the menu programmatically
@@ -361,5 +364,13 @@
         // If the parent set OpenMenuOnRender on the bound InstructionItem, open the menu now
         // We don't have direct access to the InstructionItem here; parent will set ShowMenu via binding when appropriate.
         await base.OnAfterRenderAsync(firstRender);
+
+        if (OpenMenuOnRender)
+        {
+        await OpenMenuAsync(true);
+ 
+        await OpenMenuOnRenderChanged.InvokeAsync(false);
+        }
+
     }
 }

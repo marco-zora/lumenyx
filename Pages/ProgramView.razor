@@ -14,10 +14,7 @@
                 <div class="preview-controls">
                     <button class="btn btn-sm btn-outline-light" @onclick="@(async () => await PlayPreview())">Play</button>
                 </div>
-            <div class="debug-info" style="margin-top:0.5rem;color:#94a3b8;font-size:0.8rem;">
-                <div>Debug: IP=@(_lastPlayedIndex) ended=@(_lastEnded?.ToString() ?? "-")</div>
-                <div>ResolvedUrl=@(_lastResolvedUrl ?? "-") Found=@(_lastMediaFound)</div>
-            </div>
+            <!-- debug-info removed in minimal build -->
             </div>
 
             <div class="preview-frame">
@@ -105,10 +102,7 @@
 
     private CancellationTokenSource? _playbackCts;
     private bool _isPlaying;
-    private int? _lastPlayedIndex;
-    private bool? _lastEnded;
-    private string? _lastResolvedUrl;
-    private bool _lastMediaFound;
+    // debug fields removed
 
     protected override void OnInitialized()
     {
@@ -200,11 +194,6 @@
                     PreviewVideoUrl = inst.MediaId;
                 }
 
-                // update debug fields before rendering so UI shows them immediately
-                _lastPlayedIndex = idx;
-                _lastResolvedUrl = PreviewVideoUrl;
-                _lastMediaFound = media != null;
-
                 await InvokeAsync(StateHasChanged);
 
                 // small delay to ensure element updates
@@ -216,7 +205,6 @@
                 try
                 {
                     ended = await Js.InvokeAsync<bool>("videoInterop.playAndWaitWithSrc", _previewVideoRef, PreviewVideoUrl);
-                    _lastEnded = ended;
                     await InvokeAsync(StateHasChanged);
                 }
                 catch

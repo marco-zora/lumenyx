@@ -67,7 +67,7 @@ window.videoInterop.playAndWaitWithSrc = function (element, src) {
 
             if (!el) { resolve(false); return; }
 
-            console.log("videoInterop.playAndWaitWithSrc called. src=", src, " element=", el);
+            // debug log removed for minimal build
 
             if (src) {
                 try {
@@ -80,18 +80,14 @@ window.videoInterop.playAndWaitWithSrc = function (element, src) {
             try { el.muted = true; } catch (e) { }
 
             let onEnded = function () {
-                console.log('videoInterop: ended event for src=', src);
                 cleanup();
                 resolve(true);
             };
 
             let onPause = function () {
                 try {
-                    console.log('videoInterop: pause event for src=', src, ' currentTime=', el.currentTime, ' duration=', el.duration);
-
                     // If the pause happens at the end (currentTime ~= duration), treat as ended
                     if (el.duration && Math.abs(el.currentTime - el.duration) < 0.5) {
-                        console.log('videoInterop: pause at end detected, treating as ended.');
                         cleanup();
                         resolve(true);
                         return;
@@ -115,10 +111,7 @@ window.videoInterop.playAndWaitWithSrc = function (element, src) {
             el.addEventListener('ended', onEnded);
             el.addEventListener('pause', onPause);
 
-            el.play().then(() => {
-                console.log('videoInterop: play() started for src=', src);
-            }).catch((err) => {
-                console.log('videoInterop: play() failed for src=', src, err);
+            el.play().catch(() => {
                 cleanup();
                 resolve(false);
             });

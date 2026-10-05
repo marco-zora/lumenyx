@@ -17,11 +17,13 @@
                 <div class="add-menu" @onclick:stopPropagation="true">
                     @foreach (var t in AvailableTypes)
                     {
-                        <button class="add-menu-item" @onclick="() => AddNewInstruction(t)" title="Aggiungi @GetLabel(t)">
+                        <button class="add-menu-item" @onclick="async () => await AddNewInstruction(t)" title="Aggiungi @GetLabel(t)">
                             <i class="@GetIconClass(t) add-menu-icon" aria-hidden="true"></i>
                             <span class="add-menu-label">@GetLabel(t)</span>
                         </button>
                     }
+
+   
                 </div>
             }
         </div>
@@ -81,7 +83,7 @@
                         {
                         case "video":
 
-                                <VideoInstruction @bind-SelectedVideoId="instruction.MediaId" @bind-OpenMenuOnRender="instruction.OpenMenuOnRender" />
+                                <VideoInstruction InstructionId="instruction.Id" RemoveRequested="@(id => RemoveInsertedInstruction(id))" @bind-SelectedVideoId="instruction.MediaId" @bind-OpenMenuOnRender="instruction.OpenMenuOnRender" />
 
                                 break;
 
@@ -210,9 +212,16 @@
         ShowAddMenu = false;
     }
 
-    private void AddNewInstruction(string type)
+    private async Task AddNewInstruction(string type)
     {
         var newItem = new InstructionItem { Type = type };
+
+        // If video type, set the OpenMenuOnRender flag BEFORE inserting so the child
+        // receives the value during its initial render.
+        if (type == "video")
+        {
+            newItem.OpenMenuOnRender = true;
+        }
 
         var idx = SelectedInstructionIndex;
         if (idx >= 0)
@@ -227,13 +236,13 @@
         // Select new item
         SelectedInstructionId = newItem.Id;
 
-        // If video type, request the component to open its menu on render
-        if (type == "video")
-        {
-            newItem.OpenMenuOnRender = true;
-        }
-
         ShowAddMenu = false;
+
+        // Ensure Blazor renders the new component so it can be referenced
+        await InvokeAsync(StateHasChanged);
+        await Task.Yield();
+
+        // child components will react to OpenMenuOnRender during their initial render
     }
 
     // Type metadata (icon + label)
@@ -366,6 +375,17 @@
             {
                 SelectedInstructionId = Guid.Empty;
             }
+        }
+    }
+
+
+    private void RemoveInsertedInstruction(Guid id)
+    {
+        var item = Instructions.FirstOrDefault(x => x.Id == id);
+        if (item != null)
+        {
+            // reuse existing DeleteInstruction logic for consistent behavior
+            DeleteInstruction(item);
         }
     }
 
