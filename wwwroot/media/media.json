@@ -3,7 +3,7 @@
     "id": "1",
     "type": "video",
     "name": "Cena per due",
-    "url": "/media/VIDEO-002.mp4",
+    "url": "./media/VIDEO-002.mp4",
     "thumbnailUrl": "media/video_frame_playback.png",
     "durationSeconds": 37
   },
