@@ -1,0 +1,58 @@
+@using BlazorPWA.Components
+
+<div class="media-row">
+    <div class="row-header">
+        <h3>@Title</h3>
+    </div>
+
+    <div class="row-body">
+        <button class="row-arrow left" @onclick="() => Scroll(-1)" aria-label="Scroll left">‹</button>
+
+        <div class="carousel-viewport">
+            <div class="carousel-track" @ref="_trackRef">
+                @foreach (var item in Items)
+                {
+                    <div class="media-card" tabindex="0" @onclick="() => OnSelect(item)">
+                        <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy" />
+                        <div class="media-label">@item.Name</div>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <button class="row-arrow right" @onclick="() => Scroll(1)" aria-label="Scroll right">›</button>
+    </div>
+
+</div>
+
+@code {
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public List<MediaItem> Items { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<MediaItem> Selected { get; set; }
+
+    private ElementReference _trackRef;
+
+    private async Task Scroll(int dir)
+    {
+        try
+        {
+            // scroll by viewport width * 0.7
+            var offset = (int)(await JSRuntime.InvokeAsync<double>("eval", "window.innerWidth") * 0.7) * dir;
+            await JSRuntime.InvokeVoidAsync("carouselInterop.scrollByOffset", _trackRef, offset);
+        }
+        catch { }
+    }
+
+    private async Task OnSelect(MediaItem item)
+    {
+        if (Selected.HasDelegate) await Selected.InvokeAsync(item);
+    }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+}

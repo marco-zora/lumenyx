@@ -29,6 +29,8 @@
         public string Url { get; set; } = "";
         public string ThumbnailUrl { get; set; } = string.Empty;
         public double DurationSeconds { get; set; }
+        // New: collection/grouping for library rows (e.g. "Trending", "Recommended")
+        public string Collection { get; set; } = "";
     }   
 
 

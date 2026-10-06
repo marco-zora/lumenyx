@@ -1,0 +1,35 @@
+@page "/library"
+@inject BlazorPWA.Services.IMediaService MediaService
+
+<div class="library-page">
+    <h1>Library</h1>
+
+    @if (_groups == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        @foreach (var g in _groups)
+        {
+            <MediaRow Title="@g.Key" Items="@g.Value" Selected="OnSelectItem" />
+        }
+    }
+
+</div>
+
+@code {
+    private Dictionary<string, List<BlazorPWA.Components.MediaItem>>? _groups;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _groups = await MediaService.GetAllGroupedByCollectionAsync();
+    }
+
+    private Task OnSelectItem(BlazorPWA.Components.MediaItem item)
+    {
+        // For now just log to console; could open preview/player
+        Console.WriteLine($"Selected {item.Name} ({item.Id})");
+        return Task.CompletedTask;
+    }
+}

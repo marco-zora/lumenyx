@@ -8,6 +8,8 @@ namespace BlazorPWA.Services
     {
         Task<List<MediaItem>> GetAllAsync();
         Task<MediaItem?> GetByIdAsync(string id);
+        // Grouped by collection name (collection -> list of media items)
+        Task<Dictionary<string, List<MediaItem>>> GetAllGroupedByCollectionAsync();
         /// <summary>
         /// Forces reload of media.json from the server and updates the internal cache.
         /// </summary>

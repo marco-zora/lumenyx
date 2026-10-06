@@ -42,6 +42,15 @@ namespace BlazorPWA.Services
             await EnsureLoadedAsync(force: true);
         }
 
+        public async Task<Dictionary<string, List<MediaItem>>> GetAllGroupedByCollectionAsync()
+        {
+            var all = await GetAllAsync();
+            // Group by collection; empty collection goes to 'Uncategorized'
+            var groups = all.GroupBy(m => string.IsNullOrWhiteSpace(m.Collection) ? "Uncategorized" : m.Collection)
+                             .ToDictionary(g => g.Key, g => g.ToList());
+            return groups;
+        }
+
         private async Task EnsureLoadedAsync(bool force = false)
         {
             if (_loaded && !force) return;
