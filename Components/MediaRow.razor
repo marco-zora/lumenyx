@@ -1,15 +1,21 @@
-@using BlazorPWA.Components
+
 
 <div class="media-row">
     <div class="row-header">
-        <h3>@Title</h3>
+        <div class="collection-title">
+            <h3>@Title</h3>
+        </div>
     </div>
 
     <div class="row-body">
-        <button class="row-arrow left" @onclick="() => Scroll(-1)" aria-label="Scroll left">‹</button>
+        <button class="row-arrow left" @onclick="() => Scroll(-1)" aria-label="Scroll left">
+            <svg width="18" height="32" viewBox="0 0 18 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M15 2L3 16L15 30" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
 
-        <div class="carousel-viewport">
-            <div class="carousel-track" @ref="_trackRef">
+        <div class="carousel-viewport" @ref="_trackRef">
+            <div class="carousel-track">
                 @foreach (var item in Items)
                 {
                     <div class="media-card" tabindex="0" @onclick="() => OnSelect(item)">
@@ -20,11 +26,16 @@
             </div>
         </div>
 
-        <button class="row-arrow right" @onclick="() => Scroll(1)" aria-label="Scroll right">›</button>
+        <button class="row-arrow right" @onclick="() => Scroll(1)" aria-label="Scroll right">
+            <svg width="18" height="32" viewBox="0 0 18 32" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                <path d="M3 2L15 16L3 30" stroke="white" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+            </svg>
+        </button>
     </div>
 
 </div>
 
+@*
 @code {
     [Parameter]
     public string Title { get; set; } = "";
@@ -43,7 +54,10 @@
         {
             // scroll by viewport width * 0.7
             var offset = (int)(await JSRuntime.InvokeAsync<double>("eval", "window.innerWidth") * 0.7) * dir;
-            await JSRuntime.InvokeVoidAsync("carouselInterop.scrollByOffset", _trackRef, offset);
+            //await JSRuntime.InvokeVoidAsync("carouselInterop.scrollByOffset", _trackRef, offset);
+            await JSRuntime.InvokeVoidAsync(
+                "carouselInterop.scrollByOffset",
+                offset);
         }
         catch { }
     }
@@ -55,4 +69,74 @@
 
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
+}
+*@
+
+
+
+
+
+@code {
+
+    [Parameter]
+    public string Title { get; set; } = "";
+
+    [Parameter]
+    public List<MediaItem> Items { get; set; } = new();
+
+    [Parameter]
+    public EventCallback<MediaItem> Selected { get; set; }
+
+    [Inject]
+    private IJSRuntime JSRuntime { get; set; } = default!;
+
+    private IJSObjectReference? _module;
+
+    private ElementReference _trackRef;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender)
+            return;
+
+        _module = await JSRuntime.InvokeAsync<IJSObjectReference>(
+            "import",
+            "./js/carouselInterop.js");
+    }
+
+    private async Task Scroll(int dir)
+    {
+        if (_module is null)
+            return;
+
+        var offset =
+            (int)(await JSRuntime.InvokeAsync<double>(
+                "eval",
+                "window.innerWidth") * 0.7) * dir;
+
+        await _module.InvokeVoidAsync(
+            "scrollByOffset",
+            _trackRef,
+            offset);
+    }
+
+    private async Task OnSelect(MediaItem item)
+    {
+        if (Selected.HasDelegate)
+            await Selected.InvokeAsync(item);
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_module is not null)
+        {
+            try
+            {
+                await _module.DisposeAsync();
+            }
+            catch
+            {
+            }
+        }
+    }
 }

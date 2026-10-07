@@ -4,26 +4,29 @@
 <div class="library-page">
     <h1>Library</h1>
 
-    @if (_groups == null)
+    @if (_collections == null)
     {
         <p>Loading...</p>
     }
     else
     {
-        @foreach (var g in _groups)
+        @foreach (var col in _collections)
         {
-            <MediaRow Title="@g.Key" Items="@g.Value" Selected="OnSelectItem" />
+            var items = col.Items.Select(id => _allMedia.FirstOrDefault(m => m.Id == id)).Where(x => x != null).Select(x => x!).ToList();
+            <MediaRow Title="@col.Title" Items="@items" Selected="OnSelectItem" />
         }
     }
 
 </div>
 
 @code {
-    private Dictionary<string, List<BlazorPWA.Components.MediaItem>>? _groups;
+    private List<BlazorPWA.Components.CollectionModel>? _collections;
+    private List<BlazorPWA.Components.MediaItem> _allMedia = new();
 
     protected override async Task OnInitializedAsync()
     {
-        _groups = await MediaService.GetAllGroupedByCollectionAsync();
+        _allMedia = await MediaService.GetAllAsync();
+        _collections = await MediaService.GetCollectionsAsync();
     }
 
     private Task OnSelectItem(BlazorPWA.Components.MediaItem item)

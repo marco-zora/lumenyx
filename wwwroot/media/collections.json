@@ -1,0 +1,26 @@
+[
+  {
+    "id": "c1",
+    "title": "Consigliati per te",
+    "description": "Titoli selezionati in base ai tuoi interessi",
+    "items": [ "1", "3", "2", "5", "1", "2", "3", "4", "1", "3", "2", "5", "1", "2", "3", "4" ]
+  },
+  {
+    "id": "c2",
+    "title": "I titoli del momento",
+    "description": "Le uscite e i trend attuali",
+    "items": [ "2", "6", "3", "3", "4", "1", "3", "2", "5", "1", "2", "3", "4" ]
+  },
+  {
+    "id": "c3",
+    "title": "Promozioni",
+    "description": "Immagini e banner promozionali",
+    "items": ["4"]
+  },
+  {
+    "id": "c4",
+    "title": "Documenti",
+    "description": "PDF e documentazione tecnica",
+    "items": ["5"]
+  }
+]

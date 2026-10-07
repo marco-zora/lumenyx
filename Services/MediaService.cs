@@ -44,11 +44,19 @@ namespace BlazorPWA.Services
 
         public async Task<Dictionary<string, List<MediaItem>>> GetAllGroupedByCollectionAsync()
         {
+            // Legacy grouping by per-item Collection property (kept for compatibility)
             var all = await GetAllAsync();
-            // Group by collection; empty collection goes to 'Uncategorized'
             var groups = all.GroupBy(m => string.IsNullOrWhiteSpace(m.Collection) ? "Uncategorized" : m.Collection)
                              .ToDictionary(g => g.Key, g => g.ToList());
             return groups;
+        }
+
+        public async Task<List<CollectionModel>> GetCollectionsAsync()
+        {
+            // load collections.json from wwwroot/media/collections.json
+            var url = "media/collections.json";
+            var cols = await _http.GetFromJsonAsync<List<CollectionModel>>(url);
+            return cols ?? new List<CollectionModel>();
         }
 
         private async Task EnsureLoadedAsync(bool force = false)

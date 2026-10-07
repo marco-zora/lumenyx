@@ -1,55 +1,135 @@
 .media-row {
     margin: 1rem 0 2rem 0;
-}
-.media-row .row-header h3 {
-    color: #fff;
-    margin: 0 0 0.5rem 0;
-}
-.media-row .row-body {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-}
-.media-row .carousel-viewport {
     overflow: hidden;
-    flex: 1 1 auto;
 }
-.media-row .carousel-track {
-    display: flex;
-    gap: 0.75rem;
-    padding: 0.25rem 0.5rem;
-    scroll-behavior: smooth;
-}
-.media-row .media-card {
-    width: 160px;
-    flex: 0 0 auto;
-    background: #111;
-    border-radius: 8px;
-    overflow: hidden;
-    cursor: pointer;
-}
-.media-row .media-card img {
-    width: 100%;
-    height: 240px;
-    object-fit: cover;
-    display:block;
-}
-.media-row .media-label {
-    padding: 0.4rem 0.6rem;
-    color: #fff;
-    font-size: 0.9rem;
-}
-.media-row .row-arrow {
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    border: none;
-    width: 40px;
-    height: 80px;
-    border-radius: 20px;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    cursor:pointer;
-}
-.media-row .row-arrow.left { margin-right: 0.25rem; }
-.media-row .row-arrow.right { margin-left: 0.25rem; }
+
+    /* Header */
+
+    .media-row .row-header h3 {
+        margin: 0 0 0.5rem 0;
+        font-size: 1.6rem;
+    }
+
+    .media-row .collection-title h3 {
+        background: #ffffff;
+        color: #000;
+        display: inline-block;
+        padding: 0.35rem 0.6rem;
+        border-radius: 6px;
+        font-weight: 700;
+        box-shadow: none;
+    }
+
+    /* Row */
+
+    .media-row .row-body {
+        position: relative;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        box-sizing: border-box;
+    }
+
+    /* Viewport */
+
+    .media-row .carousel-viewport {
+        width: 100%;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+        scroll-behavior: smooth;
+    }
+
+        .media-row .carousel-viewport::-webkit-scrollbar {
+            display: none;
+        }
+
+    
+    /* Track */
+
+    .media-row .carousel-track {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 12px;
+        width: max-content;
+    }
+
+
+    /* Card */
+
+    .media-row .media-card {
+        flex: 0 0 auto;
+        width: 160px;
+    }
+
+        .media-row .media-card img {
+            width: 100%;
+            height: 240px;
+            object-fit: cover;
+            display: block;
+            transition: transform .25s ease;
+        }
+
+    .media-row .media-label {
+        padding: .5rem .65rem;
+        color: #fff;
+        font-size: .9rem;
+    }
+
+    /* Netflix hover effect */
+
+    .media-row .media-card:hover,
+    .media-row .media-card:focus {
+        transform: scale(1.08);
+        z-index: 20;
+        box-shadow: none;
+    }
+
+        .media-row .media-card:hover img,
+        .media-row .media-card:focus img {
+            transform: scale(1.05);
+        }
+
+    /* Frecce */
+
+    .media-row .row-arrow {
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 52px;
+        height: 52px;
+        border: none;
+        border-radius: 50%;
+        background: rgba(0,0,0,.65);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 50;
+        color: white;
+        opacity: .85;
+        transition: opacity .2s ease, background .2s ease, transform .2s ease;
+    }
+
+        .media-row .row-arrow:hover {
+            opacity: 1;
+            background: rgba(0,0,0,.85);
+        }
+
+        .media-row .row-arrow:active {
+            transform: translateY(-50%) scale(.95);
+        }
+
+        .media-row .row-arrow.left {
+            left: 8px;
+        }
+
+        .media-row .row-arrow.right {
+            right: 8px;
+        }
+
+        .media-row .row-arrow svg path {
+            stroke: white;
+            stroke-width: 3;
+        }
