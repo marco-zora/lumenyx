@@ -40,8 +40,8 @@
         -ms-overflow-style: none;
         scroll-behavior: smooth;
         -webkit-overflow-scrolling: touch;
-        touch-action: pan-x;
-       /* scroll-snap-type: x proximity;*/
+        /* touch-action: pan-x; */
+        scroll-snap-type: x proximity;
     }
 
         .media-row .carousel-viewport::-webkit-scrollbar {
