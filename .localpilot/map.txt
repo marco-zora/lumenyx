@@ -1,5 +1,5 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-10-07T17:43:22.3018591+02:00
+# Generated: 2026-10-07T17:52:55.2791285+02:00
 # Root: D:\BlazorPWA
 Architecture:
   Type: Backend (C#/.NET)
@@ -16,14 +16,17 @@ Architecture:
 - File: Program.cs
   Preview: "using BlazorPWA; using Microsoft.AspNetCore.Components.Web; using Microsoft.AspNetCore.Components.WebAssembly.Hosting; var builder = WebAssemblyHostBu..."
 - File: Components\CollectionModel.cs
+  Symbols: [CollectionModel]
   Preview: "namespace BlazorPWA.Components {   public class CollectionModel   {     public string Id { get; set; } = string.Empty;     public string Title { get; ..."
 - File: Components\Models.cs
   Preview: "namespace BlazorPWA.Components {   public record DeviceItem(     string Codice,     string Descrizione,     string Tipo,     string Stato,     string ..."
 - File: Properties\launchSettings.json
   Preview: "{  '$schema': 'https://json.schemastore.org/launchsettings.json',  'profiles': {   'http': {    'commandName': 'Project',    'dotnetRunMessages': true..."
 - File: Services\IMediaService.cs
+  Symbols: [IMediaService]
   Preview: "using System.Collections.Generic; using System.Threading.Tasks; using BlazorPWA.Components; namespace BlazorPWA.Services {   public interface IMediaSe..."
 - File: Services\MediaService.cs
+  Symbols: [MediaService]
   Preview: "using System.Collections.Generic; using System.Linq; using System.Net.Http; using System.Net.Http.Json; using System.Threading.Tasks; using BlazorPWA...."
 - File: .github\workflows\deploy.yml
   Preview: "name: Deploy Blazor WASM to GitHub Pages on:  push:   branches:    - main permissions:  contents: read  pages: write  id-token: write concurrency:  gr..."
