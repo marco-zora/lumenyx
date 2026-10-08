@@ -1,5 +1,3 @@
-
-
 <div class="media-row">
     <div class="row-header">
         <div class="collection-title">
@@ -16,13 +14,37 @@
 
         <div class="carousel-viewport" @ref="_trackRef">
             <div class="carousel-track">
+
                 @foreach (var item in Items)
                 {
-                    <div class="media-card" tabindex="0" @onclick="() => OnSelect(item)">
-                        <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy" />
-                        <div class="media-label">@item.Name</div>
+                    <div class="media-card @(item.IsSelected ? "selected" : "")"
+                         tabindex="0"
+                         @onclick="() => OnSelect(item)">
+
+                        <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy"/>
+
+                        
+                        <div class="media-title-overlay">
+                            @item.Name
+                        </div>
+
+                        @if (item.IsSelected)
+                        {
+                            <div class="selected-badge" aria-label="Selezionato">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M20 6L9 17L4 12"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          stroke-width="3"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        }
                     </div>
                 }
+
+
             </div>
         </div>
 
@@ -34,47 +56,6 @@
     </div>
 
 </div>
-
-@*
-@code {
-    [Parameter]
-    public string Title { get; set; } = "";
-
-    [Parameter]
-    public List<MediaItem> Items { get; set; } = new();
-
-    [Parameter]
-    public EventCallback<MediaItem> Selected { get; set; }
-
-    private ElementReference _trackRef;
-
-    private async Task Scroll(int dir)
-    {
-        try
-        {
-            // scroll by viewport width * 0.7
-            var offset = (int)(await JSRuntime.InvokeAsync<double>("eval", "window.innerWidth") * 0.7) * dir;
-            //await JSRuntime.InvokeVoidAsync("carouselInterop.scrollByOffset", _trackRef, offset);
-            await JSRuntime.InvokeVoidAsync(
-                "carouselInterop.scrollByOffset",
-                offset);
-        }
-        catch { }
-    }
-
-    private async Task OnSelect(MediaItem item)
-    {
-        if (Selected.HasDelegate) await Selected.InvokeAsync(item);
-    }
-
-    [Inject]
-    private IJSRuntime JSRuntime { get; set; } = default!;
-}
-*@
-
-
-
-
 
 @code {
 
@@ -122,6 +103,8 @@
 
     private async Task OnSelect(MediaItem item)
     {
+        item.IsSelected = !item.IsSelected;
+
         if (Selected.HasDelegate)
             await Selected.InvokeAsync(item);
     }

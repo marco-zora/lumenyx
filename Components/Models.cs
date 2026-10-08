@@ -31,6 +31,8 @@
         public double DurationSeconds { get; set; }
         // New: collection/grouping for library rows (e.g. "Trending", "Recommended")
         public string Collection { get; set; } = "";
+
+        public bool IsSelected { get; set; } = false;
     }   
 
 
