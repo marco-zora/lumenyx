@@ -15,6 +15,62 @@
         <div class="carousel-viewport" @ref="_trackRef">
             <div class="carousel-track">
 
+
+             
+                @foreach (var item in Items)
+                {
+                    <div class="media-card @(item.IsSelected ? "selected" : "")"
+                         tabindex="0"
+                         @onclick="() => OnSelect(item)">
+
+                        <img src="@item.ThumbnailUrl" alt="@item.Name" loading="lazy" />
+
+                        @if (item.Type == "video")
+                        {
+                            <div class="video-play-overlay">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M8 5L19 12L8 19V5Z"
+                                          fill="currentColor" />
+                                </svg>
+                            </div>
+
+                            <div class="video-duration-badge">
+                                @(TimeSpan.FromSeconds(item.DurationSeconds)
+                                    .ToString(@"m\:ss"))
+                            </div>
+                        }
+
+                        <div class="media-title-overlay">
+                            @item.Name
+                        </div>
+
+                        @if (item.IsSelected)
+                        {
+                            <div class="selected-badge" aria-label="Selezionato">
+                                <svg viewBox="0 0 24 24" aria-hidden="true">
+                                    <path d="M20 6L9 17L4 12"
+                                          fill="none"
+                                          stroke="currentColor"
+                                          stroke-width="3"
+                                          stroke-linecap="round"
+                                          stroke-linejoin="round" />
+                                </svg>
+                            </div>
+                        }
+
+                    </div>
+                }
+
+
+
+
+
+
+
+
+
+
+                @*
                 @foreach (var item in Items)
                 {
                     <div class="media-card @(item.IsSelected ? "selected" : "")"
@@ -43,7 +99,7 @@
                         }
                     </div>
                 }
-
+                *@
 
             </div>
         </div>
@@ -121,5 +177,14 @@
             {
             }
         }
+    }
+
+    private static string FormatDuration(double durationSeconds)
+    {
+        var duration = TimeSpan.FromSeconds(durationSeconds);
+
+        return duration.TotalHours >= 1
+            ? duration.ToString(@"h\:mm\:ss")
+            : duration.ToString(@"m\:ss");
     }
 }
