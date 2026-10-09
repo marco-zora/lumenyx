@@ -1,27 +1,164 @@
 @page "/library"
+
+@using Microsoft.JSInterop
 @inject BlazorPWA.Services.IMediaService MediaService
+@inject IJSRuntime JS
 
 <div class="library-page">
+
     <h1>Media Library</h1>
 
-    @if (_collections == null)
+    <div class="library-toolbar">
+
+        <button class="btn btn-success"
+                type="button"
+                @onclick="CreateCollection">
+            + Nuova collezione
+        </button>
+
+        <span class="toolbar-separator"></span>
+
+        <span class="selection-count">
+            @SelectedCount selezionati
+        </span>
+
+        <button class="btn btn-primary"
+                type="button"
+                disabled="@(SelectedCount == 0)"
+                @onclick="OpenMovePanel">
+            Sposta
+        </button>
+
+        <button class="btn btn-secondary"
+                type="button"
+                disabled="@(SelectedCount == 0)">
+            Copia
+        </button>
+
+        <button class="btn btn-danger"
+                type="button"
+                disabled="@(SelectedCount == 0)">
+            Elimina
+        </button>
+
+        <button class="btn btn-outline-secondary"
+                type="button"
+                disabled="@(SelectedCount == 0)"
+                @onclick="DeselectAll">
+            Deseleziona tutto
+        </button>
+
+    </div>
+
+    @if (_showMovePanel)
     {
-        <p>Loading...</p>
+        <div class="move-panel">
+
+            <label for="move-target">
+                Sposta @SelectedCount elementi in:
+            </label>
+
+            <select id="move-target"
+                    class="form-select"
+                    @bind="_targetCollectionId">
+
+                <option value="">
+                    Seleziona una collezione
+                </option>
+
+                @foreach (var collection in _collections ?? new())
+                {
+                    <option value="@GetCollectionId(collection)">
+                        @collection.Title
+                    </option>
+                }
+
+            </select>
+
+            <div class="move-panel-actions">
+
+                <button class="btn btn-primary"
+                        type="button"
+                        disabled="@(string.IsNullOrWhiteSpace(_targetCollectionId))"
+                        @onclick="ConfirmMove">
+                    Conferma spostamento
+                </button>
+
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        @onclick="CancelMove">
+                    Annulla
+                </button>
+
+            </div>
+
+        </div>
+    }
+
+    @if (_collections is null)
+    {
+        <p class="library-loading">
+            Caricamento...
+        </p>
+    }
+    else if (_collections.Count == 0)
+    {
+        <div class="empty-library">
+
+            <p>Non è presente nessuna collezione.</p>
+
+            <button class="btn btn-primary"
+                    type="button"
+                    @onclick="CreateCollection">
+                Crea la prima collezione
+            </button>
+
+        </div>
     }
     else
     {
-        @foreach (var col in _collections)
-        {
-            var items = col.Items.Select(id => _allMedia.FirstOrDefault(m => m.Id == id)).Where(x => x != null).Select(x => x!).ToList();
-            <MediaRow Title="@col.Title" Items="@items" Selected="OnSelectItem" />
-        }
+        <div class="collections-container">
+
+            @foreach (var collection in _collections)
+            {
+                var collectionId = GetCollectionId(collection);
+                var rowItems = BuildRowItems(collection, collectionId);
+
+                <MediaRow @key="collection"
+                          Title="@collection.Title"
+                          Items="@rowItems"
+                          Selected="OnSelectItem"
+                          RenameRequested="@(() => RenameCollection(collection))"
+                          DeleteRequested="@(() => DeleteCollection(collection))" />
+            }
+
+            <MediaRow Title="Tutti i Media"
+                      Items="@BuildAllMediaItems()"
+                      Selected="OnSelectItem" />
+
+        </div>
     }
 
 </div>
 
 @code {
+
     private List<BlazorPWA.Components.CollectionModel>? _collections;
+
     private List<BlazorPWA.Components.MediaItem> _allMedia = new();
+
+    private readonly HashSet<SelectedMedia> _selectedItems = new();
+
+    private readonly Dictionary<BlazorPWA.Components.MediaItem, string>
+        _rowItemCollections =
+            new(ReferenceEqualityComparer.Instance);
+
+    private bool _showMovePanel;
+
+    private string _targetCollectionId = "";
+
+    private int SelectedCount => _selectedItems.Count;
+
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,10 +166,606 @@
         _collections = await MediaService.GetCollectionsAsync();
     }
 
-    private Task OnSelectItem(BlazorPWA.Components.MediaItem item)
+   
+    private List<BlazorPWA.Components.MediaItem> BuildAllMediaItems()
     {
-        // For now just log to console; could open preview/player
-        Console.WriteLine($"Selected {item.Name} ({item.Id})");
+        var result = new List<BlazorPWA.Components.MediaItem>();
+
+        foreach (var media in _allMedia)
+        {
+            var item = new BlazorPWA.Components.MediaItem
+            {
+                Id = media.Id,
+                Type = media.Type,
+                Name = media.Name,
+                Url = media.Url,
+                ThumbnailUrl = media.ThumbnailUrl,
+                DurationSeconds = media.DurationSeconds                
+            };
+
+            result.Add(item);
+        }
+
+        return result;
+    }
+
+    private static string GetCollectionId(
+        BlazorPWA.Components.CollectionModel collection)
+    {
+        /*
+         * Nel modello attuale non è disponibile un Id separato.
+         * Il titolo viene quindi usato come identificatore.
+         *
+         * Se successivamente CollectionModel avrà una proprietà Id,
+         * questo metodo dovrà restituire collection.Id.
+         */
+
+        return collection.Id;
+    }
+
+
+    private async Task CreateCollection()
+    {
+        var title = await JS.InvokeAsync<string?>(
+            "prompt",
+            "Nome della nuova collezione:");
+
+        if (string.IsNullOrWhiteSpace(title))
+            return;
+
+        title = title.Trim();
+
+        _collections ??= new();
+
+        var titleAlreadyExists = _collections.Any(
+            collection => string.Equals(
+                collection.Title,
+                title,
+                StringComparison.OrdinalIgnoreCase));
+
+        if (titleAlreadyExists)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Esiste già una collezione chiamata \"{title}\".");
+
+            return;
+        }
+
+        _collections.Add(
+            new BlazorPWA.Components.CollectionModel
+            {
+                Title = title,
+                Items = new()
+            });
+
+        StateHasChanged();
+    }
+
+
+    private async Task RenameCollection(
+        BlazorPWA.Components.CollectionModel collection)
+    {
+        var oldCollectionId = GetCollectionId(collection);
+
+        var newTitle = await JS.InvokeAsync<string?>(
+            "prompt",
+            "Nuovo nome della collezione:",
+            collection.Title);
+
+        if (string.IsNullOrWhiteSpace(newTitle))
+            return;
+
+        newTitle = newTitle.Trim();
+
+        if (string.Equals(
+            collection.Title,
+            newTitle,
+            StringComparison.Ordinal))
+        {
+            return;
+        }
+
+        if (_collections is null)
+            return;
+
+        var titleAlreadyExists = _collections.Any(
+            existingCollection =>
+                !ReferenceEquals(existingCollection, collection) &&
+                string.Equals(
+                    existingCollection.Title,
+                    newTitle,
+                    StringComparison.OrdinalIgnoreCase));
+
+        if (titleAlreadyExists)
+        {
+            await JS.InvokeVoidAsync(
+                "alert",
+                $"Esiste già una collezione chiamata \"{newTitle}\".");
+
+            return;
+        }
+
+        collection.Title = newTitle;
+
+        /*
+         * Attualmente il titolo è usato come CollectionId.
+         * Dopo la rinomina aggiorniamo quindi anche le selezioni
+         * appartenenti alla collezione rinominata.
+         */
+
+        var selectionsToUpdate = _selectedItems
+            .Where(selected =>
+                selected.CollectionId == oldCollectionId)
+            .ToList();
+
+        foreach (var selected in selectionsToUpdate)
+        {
+            _selectedItems.Remove(selected);
+
+            _selectedItems.Add(
+                new SelectedMedia(
+                    selected.MediaId,
+                    newTitle));
+        }
+
+        if (_targetCollectionId == oldCollectionId)
+            _targetCollectionId = newTitle;
+
+        StateHasChanged();
+    }
+
+
+    private async Task DeleteCollection(
+        BlazorPWA.Components.CollectionModel collection)
+    {
+        if (_collections is null)
+            return;
+
+        var collectionId = GetCollectionId(collection);
+
+        var confirmed = await JS.InvokeAsync<bool>(
+            "confirm",
+            $"Eliminare la collezione \"{collection.Title}\"?\n\n" +
+            "I file multimediali non verranno eliminati dalla libreria.");
+
+        if (!confirmed)
+            return;
+
+        _collections.Remove(collection);
+
+        /*
+         * Rimuove solo le selezioni riferite alla collezione eliminata.
+         * Le presenze degli stessi media nelle altre collezioni
+         * rimangono invariate.
+         */
+
+        _selectedItems.RemoveWhere(
+            selected => selected.CollectionId == collectionId);
+
+        if (_targetCollectionId == collectionId)
+        {
+            _targetCollectionId = "";
+            _showMovePanel = false;
+        }
+
+        StateHasChanged();
+    }
+
+
+    private List<BlazorPWA.Components.MediaItem> BuildRowItems(
+        BlazorPWA.Components.CollectionModel collection,
+        string collectionId)
+    {
+        var result =
+            new List<BlazorPWA.Components.MediaItem>();
+
+        foreach (var mediaId in collection.Items)
+        {
+            var source = _allMedia.FirstOrDefault(
+                media => media.Id == mediaId);
+
+            if (source is null)
+                continue;
+
+            var rowItem =
+                new BlazorPWA.Components.MediaItem
+                {
+                    Id = source.Id,
+                    Type = source.Type,
+                    Name = source.Name,
+                    Url = source.Url,
+                    ThumbnailUrl = source.ThumbnailUrl,
+                    DurationSeconds = source.DurationSeconds,
+                    //Collection = source.Collection,
+
+                    IsSelected = _selectedItems.Contains(
+                        new SelectedMedia(
+                            source.Id,
+                            collectionId))
+                };
+
+            _rowItemCollections[rowItem] = collectionId;
+
+            result.Add(rowItem);
+        }
+
+        return result;
+    }
+
+
+    private Task OnSelectItem(
+        BlazorPWA.Components.MediaItem rowItem)
+    {
+        if (!_rowItemCollections.TryGetValue(
+            rowItem,
+            out var collectionId))
+        {
+            return Task.CompletedTask;
+        }
+
+        var selection =
+            new SelectedMedia(
+                rowItem.Id,
+                collectionId);
+
+        if (rowItem.IsSelected)
+            _selectedItems.Add(selection);
+        else
+            _selectedItems.Remove(selection);
+
+        StateHasChanged();
+
         return Task.CompletedTask;
     }
+
+
+    private void OpenMovePanel()
+    {
+        if (SelectedCount == 0)
+            return;
+
+        _targetCollectionId = "";
+        _showMovePanel = true;
+    }
+
+
+    private void CancelMove()
+    {
+        _targetCollectionId = "";
+        _showMovePanel = false;
+    }
+
+
+    private void ConfirmMove()
+    {
+        if (_collections is null ||
+            string.IsNullOrWhiteSpace(_targetCollectionId))
+        {
+            return;
+        }
+
+        var targetCollection = _collections.FirstOrDefault(
+            collection =>
+                GetCollectionId(collection) ==
+                _targetCollectionId);
+
+        if (targetCollection is null)
+            return;
+
+        foreach (var selected in _selectedItems.ToList())
+        {
+            var sourceCollection = _collections.FirstOrDefault(
+                collection =>
+                    GetCollectionId(collection) ==
+                    selected.CollectionId);
+
+            if (sourceCollection is null)
+                continue;
+
+            /*
+             * Se origine e destinazione coincidono,
+             * non viene effettuata nessuna modifica.
+             */
+
+            if (ReferenceEquals(
+                sourceCollection,
+                targetCollection))
+            {
+                continue;
+            }
+
+            /*
+             * Rimuove soltanto il riferimento dalla collezione
+             * nella quale la card è stata selezionata.
+             */
+
+            sourceCollection.Items.Remove(selected.MediaId);
+
+            /*
+             * Le eventuali presenze dello stesso media
+             * nelle altre collezioni restano intatte.
+             */
+
+            if (!targetCollection.Items.Contains(
+                selected.MediaId))
+            {
+                targetCollection.Items.Add(
+                    selected.MediaId);
+            }
+        }
+
+        DeselectAll();
+        CancelMove();
+    }
+
+
+    private void DeselectAll()
+    {
+        _selectedItems.Clear();
+
+        StateHasChanged();
+    }
+
+
+    private sealed record SelectedMedia(
+        string MediaId,
+        string CollectionId);
 }
+
+
+
+@*
+@page "/library"
+@inject BlazorPWA.Services.IMediaService MediaService
+
+<div class="library-page">
+    <h1>Media Library</h1>
+
+    <div class="library-toolbar">
+        <span class="selection-count">@SelectedCount selezionati</span>
+
+        <button class="btn btn-primary"
+                disabled="@(SelectedCount == 0)"
+                @onclick="OpenMovePanel">
+            Sposta
+        </button>
+
+        <button class="btn btn-secondary"
+                disabled="@(SelectedCount == 0)">
+            Copia
+        </button>
+
+        <button class="btn btn-danger"
+                disabled="@(SelectedCount == 0)">
+            Elimina
+        </button>
+
+        <button class="btn btn-outline-secondary"
+                disabled="@(SelectedCount == 0)"
+                @onclick="DeselectAll">
+            Deseleziona tutto
+        </button>
+
+        <button class="btn btn-success"
+                @onclick="CreateCollection">
+            + Nuova Collezione
+        </button>
+    </div>
+
+    @if (_showMovePanel)
+    {
+        <div class="move-panel">
+            <label for="move-target">
+                Sposta @SelectedCount elementi in:
+            </label>
+
+            <select id="move-target"
+                    class="form-select"
+                    @bind="_targetCollectionId">
+                <option value="">Seleziona una collezione</option>
+
+                @foreach (var collection in _collections ?? new())
+                {
+                    <option value="@GetCollectionId(collection)">
+                        @collection.Title
+                    </option>
+                }
+            </select>
+
+            <button class="btn btn-primary"
+                    disabled="@(string.IsNullOrWhiteSpace(_targetCollectionId))"
+                    @onclick="ConfirmMove">
+                Conferma spostamento
+            </button>
+
+            <button class="btn btn-outline-secondary"
+                    @onclick="CancelMove">
+                Annulla
+            </button>
+        </div>
+    }
+
+    @if (_collections == null)
+    {
+        <p>Loading...</p>
+    }
+    else
+    {
+        @foreach (var collection in _collections)
+        {
+            var collectionId = GetCollectionId(collection);
+            var rowItems = BuildRowItems(collection, collectionId);
+
+            <MediaRow Title="@collection.Title"
+                      Items="@rowItems"
+                      Selected="OnSelectItem" />
+        }
+    }
+</div>
+
+
+
+
+
+@code {
+    [Inject]
+    private IJSRuntime JS { get; set; } = default!;
+
+    private List<BlazorPWA.Components.CollectionModel>? _collections;
+    private List<BlazorPWA.Components.MediaItem> _allMedia = new();
+
+    private readonly HashSet<SelectedMedia> _selectedItems = new();
+
+    private readonly Dictionary<BlazorPWA.Components.MediaItem, string>
+        _rowItemCollections = new(ReferenceEqualityComparer.Instance);
+
+    private bool _showMovePanel;
+    private string _targetCollectionId = "";
+
+    private int SelectedCount => _selectedItems.Count;
+
+    protected override async Task OnInitializedAsync()
+    {
+        _allMedia = await MediaService.GetAllAsync();
+        _collections = await MediaService.GetCollectionsAsync();
+    }
+
+    private async Task CreateCollection()
+    {
+        var title = await JS.InvokeAsync<string?>(
+            "prompt",
+            "Nome della nuova collezione");
+
+        if (string.IsNullOrWhiteSpace(title))
+            return;
+
+        _collections ??= new();
+
+        _collections.Add(new BlazorPWA.Components.CollectionModel
+        {
+            Title = title.Trim(),
+            Items = new()
+        });
+
+        StateHasChanged();
+    }
+
+    private static string GetCollectionId(
+        BlazorPWA.Components.CollectionModel collection)
+    {
+        // Nel modello attuale non è stata mostrata una proprietà Id.
+        // Il titolo viene quindi usato come identificatore della collezione.
+        return collection.Title;
+    }
+
+    private List<BlazorPWA.Components.MediaItem> BuildRowItems(
+        BlazorPWA.Components.CollectionModel collection,
+        string collectionId)
+    {
+        var result = new List<BlazorPWA.Components.MediaItem>();
+
+        foreach (var mediaId in collection.Items)
+        {
+            var source = _allMedia.FirstOrDefault(media => media.Id == mediaId);
+
+            if (source is null)
+                continue;
+
+            var rowItem = new BlazorPWA.Components.MediaItem
+            {
+                Id = source.Id,
+                Type = source.Type,
+                Name = source.Name,
+                Url = source.Url,
+                ThumbnailUrl = source.ThumbnailUrl,
+                DurationSeconds = source.DurationSeconds,
+                Collection = source.Collection,
+                IsSelected = _selectedItems.Contains(
+                    new SelectedMedia(source.Id, collectionId))
+            };
+
+            _rowItemCollections[rowItem] = collectionId;
+            result.Add(rowItem);
+        }
+
+        return result;
+    }
+
+    private Task OnSelectItem(BlazorPWA.Components.MediaItem rowItem)
+    {
+        if (!_rowItemCollections.TryGetValue(rowItem, out var collectionId))
+            return Task.CompletedTask;
+
+        var selection = new SelectedMedia(rowItem.Id, collectionId);
+
+        if (rowItem.IsSelected)
+            _selectedItems.Add(selection);
+        else
+            _selectedItems.Remove(selection);
+
+        StateHasChanged();
+        return Task.CompletedTask;
+    }
+
+    private void OpenMovePanel()
+    {
+        if (SelectedCount == 0)
+            return;
+
+        _targetCollectionId = "";
+        _showMovePanel = true;
+    }
+
+    private void CancelMove()
+    {
+        _targetCollectionId = "";
+        _showMovePanel = false;
+    }
+
+    private void ConfirmMove()
+    {
+        if (_collections is null || string.IsNullOrWhiteSpace(_targetCollectionId))
+            return;
+
+        var targetCollection = _collections.FirstOrDefault(
+            collection => GetCollectionId(collection) == _targetCollectionId);
+
+        if (targetCollection is null)
+            return;
+
+        foreach (var selected in _selectedItems.ToList())
+        {
+            var sourceCollection = _collections.FirstOrDefault(
+                collection => GetCollectionId(collection) == selected.CollectionId);
+
+            if (sourceCollection is null)
+                continue;
+
+            // Se origine e destinazione coincidono, non cambia nulla.
+            if (ReferenceEquals(sourceCollection, targetCollection))
+                continue;
+
+            // Rimuove soltanto il riferimento dalla collezione di provenienza.
+            sourceCollection.Items.Remove(selected.MediaId);
+
+            // Le eventuali presenze dello stesso media in altre collezioni restano intatte.
+            if (!targetCollection.Items.Contains(selected.MediaId))
+                targetCollection.Items.Add(selected.MediaId);
+        }
+
+        DeselectAll();
+        CancelMove();
+    }
+
+    private void DeselectAll()
+    {
+        _selectedItems.Clear();
+        StateHasChanged();
+    }
+
+    private sealed record SelectedMedia(
+        string MediaId,
+        string CollectionId);
+}
+*@

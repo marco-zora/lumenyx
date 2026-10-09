@@ -15,12 +15,12 @@
     "id": "c3",
     "title": "Promozioni",
     "description": "Immagini e banner promozionali",
-    "items": ["4"]
+    "items": [ "4" ]
   },
   {
     "id": "c4",
     "title": "Documenti",
     "description": "PDF e documentazione tecnica",
-    "items": ["5"]
+    "items": [ "5" ]
   }
 ]

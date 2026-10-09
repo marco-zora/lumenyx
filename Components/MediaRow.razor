@@ -1,9 +1,51 @@
+
+
 <div class="media-row">
+    
     <div class="row-header">
+
         <div class="collection-title">
             <h3>@Title</h3>
+
+            <div class="collection-menu">
+
+            <button class="collection-menu-btn"
+                    type="button"
+                    title="Opzioni collezione"
+                    @onclick="ToggleMenu">
+                &#8942;
+            </button>
+
+               
+
+            @if (_showMenu)
+            {                  
+                 <div class="menu-backdrop"
+                     @onclick="ToggleMenu">
+                </div>
+
+                <div class="collection-popup">
+
+                    <button @onclick="Rename">
+                        Rinomina
+                    </button>
+
+                    <button class="delete"
+                            @onclick="Delete">
+                        Elimina
+                    </button>
+
+                </div>
+            }
+
+            </div>
+
+
         </div>
+        
+
     </div>
+
 
     <div class="row-body">
         <button class="row-arrow left" @onclick="() => Scroll(-1)" aria-label="Scroll left">
@@ -124,6 +166,15 @@
     [Parameter]
     public EventCallback<MediaItem> Selected { get; set; }
 
+    [Parameter]
+    public EventCallback RenameRequested { get; set; }
+
+    [Parameter]
+    public EventCallback DeleteRequested { get; set; }
+
+    private bool _showMenu;
+
+
     [Inject]
     private IJSRuntime JSRuntime { get; set; } = default!;
 
@@ -139,6 +190,28 @@
         _module = await JSRuntime.InvokeAsync<IJSObjectReference>(
             "import",
             "./js/carouselInterop.js");
+    }
+
+    private void ToggleMenu()
+    {
+        //if (Title == "Tutti i Media") return;   // questa condizione impedisce l'apertura del menu per la collezione "Tutti i Media"
+        _showMenu = !_showMenu;
+    }
+
+    private async Task Rename()
+    {
+        _showMenu = false;
+
+        if (RenameRequested.HasDelegate)
+            await RenameRequested.InvokeAsync();
+    }
+
+    private async Task Delete()
+    {
+        _showMenu = false;
+
+        if (DeleteRequested.HasDelegate)
+            await DeleteRequested.InvokeAsync();
     }
 
     private async Task Scroll(int dir)

@@ -6,7 +6,6 @@
     "url": "media/VIDEO-002.mp4",
     "thumbnailUrl": "media/video_frame_playback.png",
     "durationSeconds": 37
-    ,"collection": "Consigliati per te"
   },
   {
     "id": "2",
@@ -14,8 +13,7 @@
     "name": "Squalo",
     "url": "media/VIDEO-003.mp4",
     "thumbnailUrl": "media/video_frame_playback.png",
-    "durationSeconds": 45
-    ,"collection": "I titoli del momento"
+    "durationSeconds": 45    
   },
   {
     "id": "3",
@@ -23,8 +21,7 @@
     "name": "Spiaggia",
     "url": "media/VIDEO-004.mp4",
     "thumbnailUrl": "media/image.jpg",
-    "durationSeconds": 50
-    ,"collection": "Consigliati per te"
+    "durationSeconds": 50    
   },
 
   {
@@ -33,8 +30,7 @@
     "name": "Offerta Luglio",
     "url": "media/offerta-luglio.png",
     "thumbnailUrl": "media/video_frame_playback.png",
-    "durationSeconds": 50
-    ,"collection": "Promozioni"
+    "durationSeconds": 50    
   },
   {
     "id": "5",
@@ -42,8 +38,7 @@
     "name": "Listino 2026",
     "url": "media/listino.pdf",
     "thumbnailUrl": "media/video_frame_playback.png",
-    "durationSeconds": 60
-    ,"collection": "Documenti"
+    "durationSeconds": 60    
   },
   {
     "id": "6",
@@ -51,7 +46,6 @@
     "name": "Spiaggia Numero 2",
     "url": "media/VIDEO-004.mp4",
     "thumbnailUrl": "media/image.jpg",
-    "durationSeconds": 50
-    ,"collection": "I titoli del momento"
+    "durationSeconds": 50    
   }
 ]

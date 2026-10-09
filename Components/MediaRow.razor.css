@@ -215,6 +215,102 @@
     border-radius: 3px;
 }
 
+.row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collection-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.collection-action {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    font-size: 1rem;
+    padding: 0;
+    opacity: .8;
+}
+
+    .collection-action:hover {
+        opacity: 1;
+    }
+
+
+.row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.collection-menu-btn {
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 1.2rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 0;
+    margin-left: 2px;
+}
+
+    .collection-menu-btn:hover {
+        color: #000;
+    }
+
+.collection-title {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.collection-menu {
+    position: relative;
+    display: inline-;
+}
+
+.collection-popup {
+    position: absolute;
+    top: 110%;
+    right: 0;
+    min-width: 140px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    z-index: 1000;
+    display: flex;
+    flex-direction: column;
+}
+
+    .collection-popup button {
+        background: white;
+        border: none;
+        padding: .6rem .8rem;
+        text-align: left;
+        cursor: pointer;
+    }
+
+        .collection-popup button:hover {
+            background: #f3f3f3;
+        }
+
+        .collection-popup button.delete {
+            color: #c62828;
+        }
+
+.menu-backdrop {
+    position: fixed;
+    inset: 0;
+    z-index: 9998;
+}
+
+.collection-popup {
+    z-index: 9999;
+}
 
 @media (hover: hover) {
 

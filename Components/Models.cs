@@ -30,10 +30,17 @@
         public string ThumbnailUrl { get; set; } = string.Empty;
         public double DurationSeconds { get; set; }
         // New: collection/grouping for library rows (e.g. "Trending", "Recommended")
-        public string Collection { get; set; } = "";
+        //public string Collection { get; set; } = "";
 
         public bool IsSelected { get; set; } = false;
-    }   
+    }
 
+    public class CollectionModel
+    {
+        public string Id { get; set; } = string.Empty;
+        public string Title { get; set; } = string.Empty;
+        public string? Description { get; set; }
+        public List<string> Items { get; set; } = new();
+    }
 
 }

@@ -1,9 +1,9 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-10-09T12:29:42.7193747+02:00
+# Generated: 2026-10-09T18:58:20.3838388+02:00
 # Root: D:\BlazorPWA
 Architecture:
   Type: Backend (C#/.NET)
-  Scale: 9 relevant source files
+  Scale: 8 relevant source files
   Components: 0
   Controllers: 0
   Models: 0
@@ -15,10 +15,8 @@ Architecture:
   Preview: "<Solution>  <Project Path='BlazorPWA.csproj' /> </Solution> "
 - File: Program.cs
   Preview: "using BlazorPWA; using Microsoft.AspNetCore.Components.Web; using Microsoft.AspNetCore.Components.WebAssembly.Hosting; var builder = WebAssemblyHostBu..."
-- File: Components\CollectionModel.cs
-  Symbols: [CollectionModel]
-  Preview: "namespace BlazorPWA.Components {   public class CollectionModel   {     public string Id { get; set; } = string.Empty;     public string Title { get; ..."
 - File: Components\Models.cs
+  Symbols: [MediaItem, CollectionModel, InstructionItem]
   Preview: "namespace BlazorPWA.Components {   public record DeviceItem(     string Codice,     string Descrizione,     string Tipo,     string Stato,     string ..."
 - File: Properties\launchSettings.json
   Preview: "{  '$schema': 'https://json.schemastore.org/launchsettings.json',  'profiles': {   'http': {    'commandName': 'Project',    'dotnetRunMessages': true..."
@@ -26,7 +24,7 @@ Architecture:
   Symbols: [IMediaService]
   Preview: "using System.Collections.Generic; using System.Threading.Tasks; using BlazorPWA.Components; namespace BlazorPWA.Services {   public interface IMediaSe..."
 - File: Services\MediaService.cs
-  Symbols: [MediaService]
+  Symbols: [MediaService, MediaService, GetAllGroupedByCollectionAsync, RefreshAsync, GetCollectionsAsync, GetAllAsync, EnsureLoadedAsync, GetByIdAsync]
   Preview: "using System.Collections.Generic; using System.Linq; using System.Net.Http; using System.Net.Http.Json; using System.Threading.Tasks; using BlazorPWA...."
 - File: .github\workflows\deploy.yml
   Preview: "name: Deploy Blazor WASM to GitHub Pages on:  push:   branches:    - main permissions:  contents: read  pages: write  id-token: write concurrency:  gr..."

@@ -42,15 +42,17 @@ namespace BlazorPWA.Services
             await EnsureLoadedAsync(force: true);
         }
 
+        
         public async Task<Dictionary<string, List<MediaItem>>> GetAllGroupedByCollectionAsync()
         {
             // Legacy grouping by per-item Collection property (kept for compatibility)
             var all = await GetAllAsync();
-            var groups = all.GroupBy(m => string.IsNullOrWhiteSpace(m.Collection) ? "Uncategorized" : m.Collection)
-                             .ToDictionary(g => g.Key, g => g.ToList());
+
+            //var groups = all.GroupBy(m => string.IsNullOrWhiteSpace(m.Collection) ? "Uncategorized" : m.Collection).ToDictionary(g => g.Key, g => g.ToList());
+            var groups = all.GroupBy(m => string.IsNullOrWhiteSpace(m.Id) ? "Uncategorized" : m.Id).ToDictionary(g => g.Key, g => g.ToList());
             return groups;
         }
-
+        
         public async Task<List<CollectionModel>> GetCollectionsAsync()
         {
             // load collections.json from wwwroot/media/collections.json
