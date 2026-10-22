@@ -1,38 +1,51 @@
 ﻿@page "/instruction-gallery"
 
-@using BlazorPWA.Components
+@*per chiamare i metodi del componente, bisogna avere una reference al componente*@
+<div class="preview">
+
+    <button @onclick="Run">RUN</button>
+    <VM @ref="vm" Instructions="@sequenza" />
+
+</div>
 
 
-<h3>Test immagine</h3>
 
-<img src="media/video_frame_playback.png" alt="Anteprima video" />
 
-<h3>Nuova VideoInstruction</h3>
+@code {
 
-<VideoInstruction />
+    private List<Instruction> sequenza { get; set; } =
+   [
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-002.mp4"},
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-003.mp4"},
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-004.mp4"},
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-002.mp4"},
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-003.mp4"},
+        new Instruction{ Type="video", MediaUrl="media/VIDEO-004.mp4"}
+   ];
 
-<h3>Lista istruzioni (anteprima)</h3>
+    private VM? vm;
 
-@* Mostra InstructionList con dati di esempio per verificare l'aspetto finale *@
-<InstructionList Instructions="Instructions" />
+    private async Task Run()
+    {
+        await vm!.Run(2);    // con vm! ci assicuriamo che il componente non puo essere NULL
+    }
+
+
+}
+
 
 <style>
 
-    .gallery {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 1rem;
-        padding: 1rem;
-        align-items: flex-start;
+    .vm-monitor {
+        width: 30%;
+        aspect-ratio: 16 / 9;
+        position: relative;
+        overflow: hidden;
+        background: black;
+    }
+
+    .preview {
+        width: 30%;
     }
 
 </style>
-
-@code {
-    private List<InstructionItem> Instructions { get; set; } = new()
-    {
-        new InstructionItem { Type = "video", MediaId = null, DurationSeconds = 12 },
-        new InstructionItem { Type = "image", MediaId = null, DurationSeconds = 5 },
-        new InstructionItem { Type = "video", MediaId = null, DurationSeconds = 8 }
-    };
-}

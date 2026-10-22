@@ -21,6 +21,17 @@
         public bool OpenMenuOnRender { get; set; } = false;
     }
 
+    /// <summary>
+    /// Nuova Versione di Istruzione
+    /// </summary>
+    public class Instruction
+    {
+        //public Guid Id { get; set; } = Guid.NewGuid();
+        public string Type { get; set; } = "";
+        public string MediaUrl { get; set; } = string.Empty;
+        public int DurationSeconds { get; set; } = 5;
+    }
+
     public class MediaItem
     {
         public string Id { get; set; } = "";
