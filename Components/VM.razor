@@ -21,6 +21,11 @@
                playsinline>
         </video>
 
+        <video id="@Video3Id"
+               class="vm-renderer"
+               playsinline>
+        </video>
+
     </div>
 
 </div>
@@ -33,12 +38,9 @@
 
 @code
 {
-    private readonly string VmId = Guid.NewGuid().ToString("N");    
-
-    private string Video1Id => $"video1-{VmId}";
-    private string Video2Id => $"video2-{VmId}";
-
-    
+    private string Video1Id => "Video1";
+    private string Video2Id => "Video2";
+    private string Video3Id => "Video3";
 
     // =========================
     // INPUT
@@ -57,11 +59,9 @@
     //[Parameter]
     //public RenderFragment? Monitor { get; set; }
 
-    int IP = 0;// Instruction Pointer
+
+
     string line = "";
-    int layer = 0;
-
-
     /// <summary>
     /// Metodi esposti dal Componente RAZOR
     /// </summary>
@@ -69,42 +69,125 @@
     public async Task Run(int OverlaySeconds=2)
     {
         // qui chiameremo JavaScript per video.play()
-        IP = 0;
+        int IP = 0;// Instruction Pointer
+
+        string VideoId = "Video3";
+        string NextVideoId = "";
+
+        string Url = "";
+        string NextUrl = "";
+
         line = "";
-        foreach(var instruction in Instructions)
+
+        for(IP=0;IP<Instructions.Count;IP++)
         {
-            line += IP + "-" + instruction.Type + "-" + instruction.MediaUrl + " - on layer:" + (IP%2);
-            await InvokeAsync(StateHasChanged);     // importante per aggiornare la UI dopo aver modificato il contenuto di "line"
+            var instruction = Instructions[IP];
+
+            //    await InvokeAsync(StateHasChanged);     // importante per aggiornare la UI dopo aver modificato il contenuto di "line"
 
             // Avvia il video e attende l'evento "ended"
             switch (instruction.Type)
             {
                 case "video":
                     try
-                    {                
-                        if(IP%2==0) await JS.InvokeVoidAsync("videoInterop.play", Video2Id, instruction.MediaUrl, OverlaySeconds);
-                        else await JS.InvokeVoidAsync("videoInterop.play", Video1Id, instruction.MediaUrl, OverlaySeconds);
+                    {
+                        line += "[" + IP + "]\n"; await InvokeAsync(StateHasChanged);
+
+                        VideoId = (VideoId == "Video1") ? Video2Id : ((VideoId == "Video2") ? "Video3" : "Video1");   //
+                        NextVideoId = (VideoId == "Video1") ? Video2Id : (VideoId == "Video2") ? "Video3" : "Video1";  // PRELOAD sulla traccia successiva a quella in play
+                        
+                        /* LOAD sulla traccia successiva che non viene visualizzata */
+                        if(IP+1 < Instructions.Count) // Esiste un video successivo? Precarica il prossimo video se non siamo all'ultima istruzione
+                        {
+                            NextUrl = Instructions[IP+1].MediaUrl;
+                            line += " --- load(" + NextUrl + ") on " + NextVideoId + "\n"; await InvokeAsync(StateHasChanged);                            
+                            await JS.InvokeVoidAsync("videoInterop.load", NextVideoId, NextUrl);                            
+                        }
+
+                        /* PLAY cosi seleziona la traccia video da visualizzare */
+                        Url = instruction.MediaUrl;
+                        line += "play (" + Url + ") on " + VideoId + "\n"; await InvokeAsync(StateHasChanged);
+                        await JS.InvokeVoidAsync("videoInterop.play", VideoId, Url, OverlaySeconds);
                     }
                     catch (JSException ex)
                     {
                         line += " -> Errore video (" + ex.Message + ")";
                     }                       
                     break;
+
                 default:
                     line += "Tipo di istruzione non supportato: " + instruction.Type; 
                     await InvokeAsync(StateHasChanged);
                     throw new NotImplementedException($"Tipo di istruzione non supportato: {instruction.Type}");                                        
             }
-
-            line += "\n";
-            await InvokeAsync(StateHasChanged);
-            //await Task.Delay(1000);     // simula il tempo di esecuzione dell'istruzione
-            IP++;            
+           
+            //await Task.Delay(1000);     // simula il tempo di esecuzione dell'istruzione         
         }
 
     }
 }
 
+
+
+
+
+<script>
+    window.videoInterop = {
+
+        play: function(videoId, mediaUrl, OverlaySeconds) {
+
+            const video = document.getElementById(videoId);
+
+            video.src = mediaUrl;
+            video.style.opacity = 1;
+            video.style.transition = `opacity ${OverlaySeconds}s ease`;
+
+            return new Promise((resolve, reject) => {
+
+                /*
+                video.onended = () => {
+                    resolve();
+                };
+                */
+
+                video.ontimeupdate = () => {
+
+                    const tempoRimanente =
+                        video.duration - video.currentTime;
+
+                    if (tempoRimanente <= OverlaySeconds) {
+
+                        video.style.opacity = 0;
+
+                        resolve();
+                    }
+                };
+
+                video.onerror = () => {
+                    reject(new Error("Errore video: " + mediaUrl));
+                };
+
+                video.play().catch(reject);
+
+            });
+        },
+
+
+
+
+        load: function (videoId, mediaUrl) {        
+
+            const video = document.getElementById(videoId);
+
+            if (!video) {
+                console.error("Video non trovato:", videoId);
+                return;
+            }
+            
+            video.src = mediaUrl;
+        }
+    };
+</script>
 
 <style>
 
@@ -132,102 +215,3 @@
     }
 
 </style>
-
-
-<script>
-    window.videoInterop = {
-
-        play: function(videoId,mediaUrl,OverlaySeconds) {
-
-            const video = document.getElementById(videoId);
-
-            video.src = mediaUrl;
-            video.style.opacity = 1;    // impiegherà 2 secondi a comparire
-            video.style.transition =    `opacity ${OverlaySeconds}s ease`;
-
-            return new Promise((resolve, reject) => {
-
-                video.onended = () => {
-                    resolve();
-                };
-
-
-                video.ontimeupdate = () => {
-
-                    const tempoRimanente = video.duration - video.currentTime;
-
-                    if (tempoRimanente <= OverlaySeconds) { 
-                        video.style.opacity = 0; // impiegherà 2 secondi a scomparire                    
-                        resolve(); // risolviamo la Promise quando mancano 2 secondi alla fine del video
-                    }
-                };
-
-
-                video.onerror = () => {
-                    reject(new Error("Errore video: " + mediaUrl));
-                };
-
-                video.play().catch(reject);
-            });
-        }
-
-    };
-</script>
-
-        @*
-             playOverlay: function(videoId, mediaUrl) {
-
-        const video = document.getElementById(videoId);
-
-        video.src = mediaUrl;
-        video.style.opacity = 0;
-
-        return new Promise((resolve, reject) => {
-
-            let resolved = false;
-
-            video.ontimeupdate = () => {
-
-                const remaining =
-                    video.duration - video.currentTime;
-
-                if (!resolved && remaining <= 2) {
-
-                    resolved = true;
-
-                    // Fade OUT della track corrente
-                    video.style.opacity = 0;
-
-                    // La VM può avviare la prossima istruzione
-                    resolve();
-                }
-            };
-
-            video.onended = () => {
-
-                video.style.opacity = 0;
-
-                // fondamentale per video < 2 secondi
-                if (!resolved) {
-                    resolved = true;
-                    resolve();
-                }
-            };
-
-            video.onerror = () => {
-                reject(
-                    new Error("Errore video: " + mediaUrl)
-                );
-            };
-
-            video.play()
-                .then(() => {
-
-                    // Fade IN
-                    video.style.opacity = 1;
-
-                })
-                .catch(reject);
-        });
-    }
-        *@
