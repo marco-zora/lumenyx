@@ -173,7 +173,7 @@
                 video.style.opacity = 1;
 
                 // Avvia, ma NON aspetta la fine del video
-                return video.play();
+               video.play();
             },
 
 
@@ -269,70 +269,6 @@
             }
         };
 
-
-
-
-
-
-
-
-
-
-/*
-
-
-        play: function(videoId, mediaUrl, OverlaySeconds) {
-
-            const video = document.getElementById(videoId);
-
-            // ABBIAMO GIA FATTO LOAD PRIMA
-            //video.src = mediaUrl;
-            video.style.opacity = 1;
-            video.style.transition = `opacity ${OverlaySeconds}s ease`;
-
-            return new Promise((resolve, reject) => {
-
-                
-                video.onended = () => {
-                    resolve();
-                };
-                
-
-                // ESCE quando mancano meno di OverlaySeconds alla fine del video
-                video.ontimeupdate = () => {
-
-                    const tempoRimanente = video.duration - video.currentTime;
-
-                    if (tempoRimanente <= OverlaySeconds) {
-                        video.style.opacity = 0;
-                        resolve();
-                    }
-                };
-
-                video.onerror = () => {
-                    reject(new Error("Play Errore video: " + mediaUrl));
-                };
-
-                video.play().catch(reject);
-
-            });
-        },
-
-       
-
-        load: function (videoId, mediaUrl) {        
-
-            const video = document.getElementById(videoId);
-            
-            if (!video) {
-                console.error("getElement Video non trovato:", videoId);
-                return;
-            }
-            
-            video.src = mediaUrl;
-        }
-    };
-    */
 </script>
 
 <style>

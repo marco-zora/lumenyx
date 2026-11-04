@@ -6,9 +6,10 @@
     align-items: center;
     gap: 8px;
     margin-bottom: 16px;
-    padding: 10px;
-    background: white;
-    border-radius: 8px;
+    padding: 8px 0;
+    background: transparent;
+    border: none;
+    border-radius: 0;
 }
 .library-header {
     display: flex;
@@ -18,12 +19,195 @@
 
     .library-header h1 {
         margin: 0;
+        color: #ffffff;
+        font-size: 1.8rem;
+        font-weight: 700;
+        letter-spacing: -0.02em;
     }
 
 .selection-count {
-    color: var(--accent-color, #ff5252);
-    font-size: .9rem;
-    font-weight: 700;
+    color: #a7a7a7;
+    font-size: .8rem;
+    font-weight: 600;
     white-space: nowrap;
 }
 
+/* Pulsanti toolbar */
+
+.library-toolbar .btn {
+    border: none;
+    border-radius: 999px;
+    padding: 7px 14px;
+    font-size: 0.85rem;
+    font-weight: 600;
+    box-shadow: none;
+    transition: background-color .15s ease, color .15s ease, transform .15s ease;
+}
+
+
+/* Nuova collezione */
+
+.library-toolbar .btn-success {
+    background: #1ed760;
+    color: #000;
+}
+
+    .library-toolbar .btn-success:hover {
+        background: #1fdf64;
+        color: #000;
+        transform: scale(1.03);
+    }
+
+
+/* Sposta / Copia */
+
+.library-toolbar .btn-primary,
+.library-toolbar .btn-secondary {
+    background: #282828;
+    color: #fff;
+}
+
+    .library-toolbar .btn-primary:hover,
+    .library-toolbar .btn-secondary:hover {
+        background: #3e3e3e;
+        color: #fff;
+    }
+
+
+/* Elimina */
+
+.library-toolbar .btn-danger {
+    background: #282828;
+    color: #fff;
+}
+
+    .library-toolbar .btn-danger:hover {
+        background: #d9363e;
+        color: #fff;
+    }
+
+
+/* Deseleziona */
+
+.library-toolbar .btn-outline-secondary {
+    background: transparent;
+    color: #a7a7a7;
+    border: 1px solid #535353;
+}
+
+    .library-toolbar .btn-outline-secondary:hover {
+        background: #282828;
+        color: #fff;
+        border-color: #727272;
+    }
+
+
+/* Disabilitati */
+
+.library-toolbar .btn:disabled {
+    background: #181818;
+    color: #666;
+    border-color: #333;
+    opacity: 1;
+}
+
+/* ================================
+   MOVE PANEL
+   ================================ */
+
+.move-panel {
+    max-width: 520px;
+    margin: 0 0 18px 0;
+    padding: 16px;
+    background: #181818;
+    border: 1px solid #2a2a2a;
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, .35);
+}
+
+    .move-panel label {
+        display: block;
+        margin-bottom: 8px;
+        color: #ffffff;
+        font-size: .9rem;
+        font-weight: 600;
+    }
+
+
+    /* Select */
+
+    .move-panel .form-select {
+        width: 100%;
+        margin-bottom: 12px;
+        background-color: #282828;
+        color: #ffffff;
+        border: 1px solid #444;
+        border-radius: 7px;
+        padding: 9px 38px 9px 12px;
+        box-shadow: none;
+    }
+
+        .move-panel .form-select:focus {
+            border-color: #777;
+            box-shadow: none;
+        }
+
+        .move-panel .form-select option {
+            background: #282828;
+            color: #ffffff;
+        }
+
+
+/* Pulsanti */
+
+.move-panel-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+    .move-panel-actions .btn {
+        border-radius: 999px;
+        border: none;
+        padding: 8px 16px;
+        font-size: .85rem;
+        font-weight: 600;
+        box-shadow: none;
+    }
+
+
+    /* Conferma */
+
+    .move-panel-actions .btn-primary {
+        background: #1ed760;
+        color: #000000;
+    }
+
+        .move-panel-actions .btn-primary:hover {
+            background: #1fdf64;
+            color: #000000;
+        }
+
+
+        /* Conferma disabilitato */
+
+        .move-panel-actions .btn-primary:disabled {
+            background: #282828;
+            color: #666666;
+            opacity: 1;
+        }
+
+
+    /* Annulla */
+
+    .move-panel-actions .btn-outline-secondary {
+        background: transparent;
+        color: #b3b3b3;
+        border: 1px solid #535353;
+    }
+
+        .move-panel-actions .btn-outline-secondary:hover {
+            background: #282828;
+            color: #ffffff;
+            border-color: #777777;
+        }

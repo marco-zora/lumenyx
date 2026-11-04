@@ -190,8 +190,35 @@
         _module = await JSRuntime.InvokeAsync<IJSObjectReference>(
             "import",
             "./js/carouselInterop.js");
-    }
 
+        foreach (var item in Items)
+        {
+            if (item.Type != "video")
+                continue;
+
+            try
+            {
+                Console.WriteLine($"THUMBNAIL: elaboro {item.Name}");
+                Console.WriteLine($"URL: {item.Url}");
+
+                var thumbnail = await JSRuntime.InvokeAsync<string>(
+                    "videoThumbnail.getMiddleFrame",
+                    item.Url);
+
+                Console.WriteLine(
+                    $"THUMBNAIL OK: {item.Name}, lunghezza={thumbnail.Length}");
+
+                item.ThumbnailUrl = thumbnail;
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine(
+                    $"THUMBNAIL ERRORE: {item.Name} -> {ex.Message}");
+            }
+        }
+
+        StateHasChanged();
+    }
     private void ToggleMenu()
     {
         //if (Title == "Tutti i Media") return;   // questa condizione impedisce l'apertura del menu per la collezione "Tutti i Media"

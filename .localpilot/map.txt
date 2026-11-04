@@ -1,5 +1,5 @@
 ## WORKSPACE EXECUTIVE SUMMARY (YAML)
-# Generated: 2026-10-23T13:11:25.2250462+02:00
+# Generated: 2026-11-04T14:13:17.5140561+01:00
 # Root: D:\BlazorPWA
 Architecture:
   Type: Backend (C#/.NET)
