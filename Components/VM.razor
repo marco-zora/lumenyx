@@ -71,8 +71,8 @@
         // qui chiameremo JavaScript per video.play()
         int IP = 0;// Instruction Pointer
 
-        string VideoId = "Video3";
-        string NextVideoId = "";
+        string VideoId = "Video1";
+        string NextVideoId = "Video2";
 
         string Url = "";
         string NextUrl = "";
@@ -82,6 +82,7 @@
         for(IP=0;IP<Instructions.Count;IP++)
         {
             var instruction = Instructions[IP];
+            Url = Instructions[IP].MediaUrl;
 
             //    await InvokeAsync(StateHasChanged);     // importante per aggiornare la UI dopo aver modificato il contenuto di "line"
 
@@ -93,21 +94,48 @@
                     {
                         line += "[" + IP + "]\n"; await InvokeAsync(StateHasChanged);
 
-                        VideoId = (VideoId == "Video1") ? Video2Id : ((VideoId == "Video2") ? "Video3" : "Video1");   //
-                        NextVideoId = (VideoId == "Video1") ? Video2Id : (VideoId == "Video2") ? "Video3" : "Video1";  // PRELOAD sulla traccia successiva a quella in play
-                        
-                        /* LOAD sulla traccia successiva che non viene visualizzata */
-                        if(IP+1 < Instructions.Count) // Esiste un video successivo? Precarica il prossimo video se non siamo all'ultima istruzione
+                        /* PRIMO LOAD */
+                        if (IP == 0) 
                         {
-                            NextUrl = Instructions[IP+1].MediaUrl;
-                            line += " --- load(" + NextUrl + ") on " + NextVideoId + "\n"; await InvokeAsync(StateHasChanged);                            
-                            await JS.InvokeVoidAsync("videoInterop.load", NextVideoId, NextUrl);                            
+                            
+                            line += " --- first load(" + Url + ") on " + VideoId + "\n"; await InvokeAsync(StateHasChanged);
+                            await JS.InvokeVoidAsync("videoInterop.load", VideoId, Url);
                         }
 
-                        /* PLAY cosi seleziona la traccia video da visualizzare */
-                        Url = instruction.MediaUrl;
                         line += "play (" + Url + ") on " + VideoId + "\n"; await InvokeAsync(StateHasChanged);
-                        await JS.InvokeVoidAsync("videoInterop.play", VideoId, Url, OverlaySeconds);
+                        // PLAY Video1.
+                        await JS.InvokeVoidAsync(
+                            "videoInterop.play",
+                            VideoId,
+                            OverlaySeconds);
+
+                        // PRELOAD SECONDO VIDEO SE PRESENTE
+                        if (IP + 1 < Instructions.Count && Instructions[IP + 1].Type == "video") // Esiste un video successivo? Precarica il prossimo video se non siamo all'ultima istruzione
+                        {              
+                            NextUrl = Instructions[IP + 1].MediaUrl;
+                            NextVideoId = (VideoId == "Video1") ? "Video2" : (VideoId == "Video2") ? "Video3" : "Video1";  // PRELOAD sulla traccia successiva a quella in play                            
+
+                            line += " --- preload(" + NextUrl + ") on " + NextVideoId + "\n"; await InvokeAsync(StateHasChanged);
+                            // LOAD Video2.
+                            await JS.InvokeVoidAsync(
+                                "videoInterop.load",
+                                NextVideoId,
+                                NextUrl);
+                        }
+
+                        line += "waitOverlay (" + Url + ") on " + VideoId + "\n"; await InvokeAsync(StateHasChanged);
+                        // Aspetta il momento di overlay.
+                        // NON blocca Video1.
+                        await JS.InvokeVoidAsync(
+                            "videoInterop.waitOverlay",
+                            VideoId,
+                            OverlaySeconds);
+
+                        line += "Overlay started \n"; await InvokeAsync(StateHasChanged);
+                        
+                        VideoId = (VideoId == "Video1") ? "Video2" : ((VideoId == "Video2") ? "Video3" : "Video1");   
+
+                        //await Task.Delay(1000);     // simula il tempo di esecuzione dell'istruzione
                     }
                     catch (JSException ex)
                     {
@@ -134,37 +162,155 @@
 <script>
     window.videoInterop = {
 
+        play: function(videoId,OverlaySeconds) {
+
+                const video = document.getElementById(videoId);
+                video.style.transition = `opacity ${OverlaySeconds}s ease`;
+
+                if (!video)
+                    throw new Error("Video non trovato: " + videoId);
+                
+                video.style.opacity = 1;
+
+                // Avvia, ma NON aspetta la fine del video
+                return video.play();
+            },
+
+
+            waitOverlay: function(videoId, OverlaySeconds) {
+
+                const video = document.getElementById(videoId);
+                video.style.transition = `opacity ${OverlaySeconds}s ease`;
+
+                if (!video)
+                    return Promise.reject(
+                        new Error("Video non trovato: " + videoId)
+                    );
+
+                return new Promise((resolve) => {
+
+                    const check = () => {
+
+                        if (!Number.isFinite(video.duration))
+                            return;
+
+                        const remaining =
+                            video.duration - video.currentTime;
+
+                        if (remaining <= OverlaySeconds) {
+
+                            video.removeEventListener(
+                                "timeupdate",
+                                check
+                            );
+
+                        video.style.opacity = 0;
+                        resolve();
+                        }
+                    };
+
+                    video.addEventListener(
+                        "timeupdate",
+                        check
+                    );
+
+                // Controlla anche immediatamente
+                check();
+                });
+            },
+
+
+            waitEnded: function(videoId) {
+
+                const video = document.getElementById(videoId);
+
+                if (!video)
+                    return Promise.reject(
+                        new Error("Video non trovato: " + videoId)
+                    );
+
+                if (video.ended)
+                    return Promise.resolve();
+
+                return new Promise((resolve) => {
+
+                    video.addEventListener(
+                        "ended",
+                        () => resolve(),
+                        { once: true }
+                    );
+                });
+            },
+
+
+            load: function(videoId, mediaUrl) {
+
+                const video = document.getElementById(videoId);
+
+                if (!video)
+                    throw new Error("Video non trovato: " + videoId);
+
+                video.src = mediaUrl;
+                video.load();
+            },
+
+
+            stop: function(videoId) {
+
+                const video = document.getElementById(videoId);
+
+                if (!video)
+                    return;
+
+                video.pause();
+                video.removeAttribute("src");
+                video.load();
+                video.style.opacity = 0;
+            }
+        };
+
+
+
+
+
+
+
+
+
+
+/*
+
+
         play: function(videoId, mediaUrl, OverlaySeconds) {
 
             const video = document.getElementById(videoId);
 
-            video.src = mediaUrl;
+            // ABBIAMO GIA FATTO LOAD PRIMA
+            //video.src = mediaUrl;
             video.style.opacity = 1;
             video.style.transition = `opacity ${OverlaySeconds}s ease`;
 
             return new Promise((resolve, reject) => {
 
-                /*
+                
                 video.onended = () => {
                     resolve();
                 };
-                */
+                
 
+                // ESCE quando mancano meno di OverlaySeconds alla fine del video
                 video.ontimeupdate = () => {
 
-                    const tempoRimanente =
-                        video.duration - video.currentTime;
+                    const tempoRimanente = video.duration - video.currentTime;
 
                     if (tempoRimanente <= OverlaySeconds) {
-
                         video.style.opacity = 0;
-
                         resolve();
                     }
                 };
 
                 video.onerror = () => {
-                    reject(new Error("Errore video: " + mediaUrl));
+                    reject(new Error("Play Errore video: " + mediaUrl));
                 };
 
                 video.play().catch(reject);
@@ -172,21 +318,21 @@
             });
         },
 
-
-
+       
 
         load: function (videoId, mediaUrl) {        
 
             const video = document.getElementById(videoId);
-
+            
             if (!video) {
-                console.error("Video non trovato:", videoId);
+                console.error("getElement Video non trovato:", videoId);
                 return;
             }
             
             video.src = mediaUrl;
         }
     };
+    */
 </script>
 
 <style>
