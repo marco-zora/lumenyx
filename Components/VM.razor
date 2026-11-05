@@ -162,60 +162,56 @@
 <script>
     window.videoInterop = {
 
-        play: function(videoId,OverlaySeconds) {
+            play: function (videoId, overlaySeconds) {
 
                 const video = document.getElementById(videoId);
-                video.style.transition = `opacity ${OverlaySeconds}s ease`;
 
-                if (!video)
-                    throw new Error("Video non trovato: " + videoId);
-                
+                if (!video) throw new Error("Video non trovato: " + videoId);
+
+                video.style.transition = `opacity ${overlaySeconds}s ease`;
+            
+                // Avvia la dissolvenza in ingresso
                 video.style.opacity = 1;
 
-                // Avvia, ma NON aspetta la fine del video
-               video.play();
+                video.play()
+                    .then(() => {
+                        console.log("PLAY OK:", videoId);
+                    })
+                    .catch(error => {
+                        console.error(
+                            "PLAY ERROR:",
+                            videoId,
+                            error.name,
+                            error.message
+                        );
+                    });            
             },
 
-
-            waitOverlay: function(videoId, OverlaySeconds) {
+            waitOverlay: function (videoId, overlaySeconds) {
 
                 const video = document.getElementById(videoId);
-                video.style.transition = `opacity ${OverlaySeconds}s ease`;
 
-                if (!video)
-                    return Promise.reject(
-                        new Error("Video non trovato: " + videoId)
-                    );
+                if (!video) throw new Error("Video non trovato: " + videoId);
 
-                return new Promise((resolve) => {
+                video.style.transition = `opacity ${overlaySeconds}s ease`;
 
-                    const check = () => {
+                return new Promise(resolve => {
 
-                        if (!Number.isFinite(video.duration))
-                            return;
+                    video.addEventListener("timeupdate", function check() {
 
-                        const remaining =
-                            video.duration - video.currentTime;
+                        const remaining = video.duration - video.currentTime;
 
-                        if (remaining <= OverlaySeconds) {
+                        if (remaining <= overlaySeconds) {
 
-                            video.removeEventListener(
-                                "timeupdate",
-                                check
-                            );
+                            video.removeEventListener("timeupdate", check);
 
-                        video.style.opacity = 0;
-                        resolve();
+                            video.style.opacity = 0;
+
+                            resolve();
                         }
-                    };
 
-                    video.addEventListener(
-                        "timeupdate",
-                        check
-                    );
+                    });
 
-                // Controlla anche immediatamente
-                check();
                 });
             },
 
@@ -288,8 +284,10 @@
         height: 100%;
         object-fit: contain;
         opacity: 0;
-        /*transition: opacity 2s linear;*/
+        will-change: opacity;
+        transform: translateZ(0);
     }
+
 
     .vm-instructions {
         white-space: pre-line;
