@@ -1,0 +1,277 @@
+﻿@inject NextcloudSession NextcloudSession
+
+
+@page "/nextcloud-login"
+
+@using System.Net
+@using System.Net.Http.Headers
+@using System.Text
+
+@inject HttpClient Http
+
+<div class="login-page">
+
+    <div class="login-card">
+
+        <h2>Nextcloud</h2>
+        <p class="subtitle">Accedi al tuo account</p>
+
+        <div class="form-group">
+            <label>Server</label>
+
+            <input type="url"
+                   @bind="ServerUrl"
+                   placeholder="https://cloud.example.com"
+                   disabled="@IsConnecting" />
+        </div>
+
+        <div class="form-group">
+            <label>Nome utente</label>
+
+            <input type="text"
+                   @bind="Username"
+                   placeholder="Nome utente"
+                   disabled="@IsConnecting" />
+        </div>
+
+        <div class="form-group">
+            <label>Password</label>
+
+            <input type="password"
+                   @bind="Password"
+                   placeholder="Password"
+                   disabled="@IsConnecting"
+                   @onkeydown="HandlePasswordKeyDown" />
+        </div>
+
+        <button class="login-button"
+                @onclick="LoginAsync"
+                disabled="@IsConnecting">
+
+            @if (IsConnecting)
+            {
+                <span>Connessione...</span>
+            }
+            else
+            {
+                <span>Accedi</span>
+            }
+
+        </button>
+
+        @if (!string.IsNullOrWhiteSpace(SuccessMessage))
+        {
+            <div class="success-message">
+                @SuccessMessage
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(DirectoryContent))
+        {
+            <div class="directory-content">
+                <h3>Contenuto directory</h3>
+
+                <pre>@DirectoryContent</pre>
+            </div>
+        }
+
+        @if (!string.IsNullOrWhiteSpace(ErrorMessage))
+        {
+            <div class="error-message">
+                @ErrorMessage
+            </div>
+        }
+
+    </div>
+
+</div>
+
+@code {
+
+    private string ServerUrl =
+        "https://lisosomialipalermo.irib.cnr.it";
+
+    private string Username = "api_app";
+
+    private string Password = "";
+
+    private bool IsConnecting;
+
+    private string? SuccessMessage;
+
+    private string? ErrorMessage;
+
+    private string? DirectoryContent;
+
+
+    private async Task HandlePasswordKeyDown(
+        Microsoft.AspNetCore.Components.Web.KeyboardEventArgs args)
+    {
+        if (args.Key == "Enter" && !IsConnecting)
+        {
+            await LoginAsync();
+        }
+    }
+
+    private async Task LoginAsync()
+    {
+        SuccessMessage = null;
+        ErrorMessage = null;
+
+        ServerUrl = ServerUrl.Trim().TrimEnd('/');
+        Username = Username.Trim();
+
+        if (string.IsNullOrWhiteSpace(ServerUrl))
+        {
+            ErrorMessage =
+                "Inserisci l'indirizzo del server Nextcloud.";
+
+            return;
+        }
+
+        if (!Uri.TryCreate(
+                ServerUrl,
+                UriKind.Absolute,
+                out Uri? serverUri) ||
+            serverUri.Scheme != Uri.UriSchemeHttps)
+        {
+            ErrorMessage =
+                "L'indirizzo del server non è valido. " +
+                "Deve iniziare con https://";
+
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Username))
+        {
+            ErrorMessage = "Inserisci il nome utente.";
+            return;
+        }
+
+        if (string.IsNullOrWhiteSpace(Password))
+        {
+            ErrorMessage = "Inserisci la password.";
+            return;
+        }
+
+        IsConnecting = true;
+
+        try
+        {
+            string encodedUsername =
+                Uri.EscapeDataString(Username);
+
+            string webDavUrl =
+                //$"{ServerUrl}/remote.php/dav/files/{encodedUsername}/";
+                $"https://first.marcomaria-zora.workers.dev/api/dav/remote.php/dav/files/{encodedUsername}/";
+
+
+            using HttpRequestMessage request = new(
+                new HttpMethod("PROPFIND"),
+                webDavUrl);
+
+            request.Headers.TryAddWithoutValidation(
+                 "X-Nextcloud-Username",
+                 Username);
+
+            request.Headers.TryAddWithoutValidation(
+                "X-Nextcloud-Password",
+                Password);
+
+
+            request.Headers.TryAddWithoutValidation(
+                "Depth",
+                "1");       // Depth: 1 significa: restituisci la cartella corrente e i suoi figli immediati.
+
+            const string requestBody = """
+                <?xml version="1.0" encoding="utf-8" ?>
+                <d:propfind xmlns:d="DAV:">
+                    <d:prop>
+                        <d:displayname />
+                        <d:resourcetype />
+                    </d:prop>
+                </d:propfind>
+                """;
+
+            request.Content = new StringContent(
+                requestBody,
+                Encoding.UTF8,
+                "application/xml");
+
+            using HttpResponseMessage response =
+                await Http.SendAsync(request);
+
+            if (response.StatusCode ==
+                    HttpStatusCode.MultiStatus ||
+                response.IsSuccessStatusCode)
+            {
+                SuccessMessage =
+                    "Connessione a Nextcloud riuscita.";
+
+                DirectoryContent =
+                        await response.Content.ReadAsStringAsync();
+
+                NextcloudSession.Connect(Username,Password);
+
+                return;
+            }
+
+            if (response.StatusCode ==
+                    HttpStatusCode.Unauthorized ||
+                response.StatusCode ==
+                    HttpStatusCode.Forbidden)
+            {
+                ErrorMessage =
+                    "Accesso negato. Controlla il nome utente " +
+                    "e la password.";
+
+                return;
+            }
+
+            if (response.StatusCode ==
+                HttpStatusCode.NotFound)
+            {
+                ErrorMessage =
+                    "Server raggiunto, ma la directory WebDAV " +
+                    $"dell'utente '{Username}' non è stata trovata.";
+
+                return;
+            }
+
+            string responseBody =
+                await response.Content.ReadAsStringAsync();
+
+            ErrorMessage =
+                $"Nextcloud ha risposto con errore " +
+                $"{(int)response.StatusCode} " +
+                $"{response.ReasonPhrase}.";
+
+            Console.WriteLine(responseBody);
+        }
+        catch (HttpRequestException ex)
+        {
+            ErrorMessage =
+                "Impossibile contattare Nextcloud. " +
+                "Se nella console del browser compare un errore CORS, " +
+                "sarà necessario passare attraverso il Cloudflare Worker.";
+
+            Console.WriteLine(ex);
+        }
+        catch (TaskCanceledException)
+        {
+            ErrorMessage =
+                "La richiesta a Nextcloud è scaduta.";
+        }
+        catch (Exception ex)
+        {
+            ErrorMessage =
+                $"Errore durante la connessione: {ex.Message}";
+
+            Console.WriteLine(ex);
+        }
+        finally
+        {
+            IsConnecting = false;
+        }
+    }
+}

@@ -54,4 +54,32 @@
         public List<string> Items { get; set; } = new();
     }
 
+    public class NextcloudSession
+    {
+        public bool IsConnected { get; private set; }
+
+        public string Username { get; private set; } = "";
+        public string Password { get; private set; } = "";
+
+        public event Action? OnChange;
+
+        public void Connect(string username, string password)
+        {
+            Username = username;
+            Password = password;
+            IsConnected = true;
+
+            OnChange?.Invoke();
+        }
+
+        public void Disconnect()
+        {
+            Username = "";
+            Password = "";
+            IsConnected = false;
+
+            OnChange?.Invoke();
+        }
+    }
+
 }

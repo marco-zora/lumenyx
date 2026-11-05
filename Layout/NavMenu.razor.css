@@ -11,6 +11,19 @@
     font-size: 1.1rem;
 }
 
+.brand-block {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.connected-user {
+    margin-top: -4px;
+    font-size: 13px;
+    color: #9ca8c7;
+}
+
+
 .bi {
     display: inline-block;
     position: relative;

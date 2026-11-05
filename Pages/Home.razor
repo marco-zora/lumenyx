@@ -18,21 +18,25 @@ Welcome to your new app.
 
 <p>@Messaggio</p>
 
-<NavLink href="./Devices" >
-    Apri Devices
-</NavLink>
+<div class="test-menu">
 
-<NavLink href="./instruction-gallery">
-    Instruction Gallery
-</NavLink>
+    <NavLink href="./Devices" >
+        Apri Devices
+    </NavLink>
 
-<NavLink href="./VM">
-    Virtual Machine
-</NavLink>
+    <NavLink href="./instruction-gallery">
+        Instruction Gallery
+    </NavLink>
 
+    <NavLink href="./VM">
+        Virtual Machine
+    </NavLink>
 
+    <NavLink href="./nextcloud-login">
+        Nextcloud Login
+    </NavLink>
 
-
+</div>
 
 @code {
 
@@ -95,4 +99,10 @@ Welcome to your new app.
 
 }
 
-
+<style>
+    .test-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    }
+</style>
