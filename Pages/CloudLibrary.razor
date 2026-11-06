@@ -1,0 +1,575 @@
+﻿@page "/cloud-library"
+
+@using System.Net
+@using System.Text
+@using System.Xml.Linq
+
+@inject HttpClient Http
+@inject NextcloudSession Session
+
+
+<div class="cloud-library">
+
+    <div class="library-header">
+
+        <div>
+            <h1>Libreria</h1>
+
+            @if (selectedCollection == null)
+            {
+                <p>Le tue raccolte multimediali</p>
+            }
+            else
+            {
+                <p>Libreria / @selectedCollection.Name</p>
+            }
+        </div>
+
+        <button class="refresh-button"
+                @onclick="LoadCollections"
+                disabled="@loading">
+            ↻ Aggiorna
+        </button>
+
+    </div>
+
+
+    @if (selectedCollection != null)
+    {
+        <div class="collection-header">
+
+            <button class="back-button"
+                    @onclick="CloseCollection"
+                    disabled="@loading">
+                ←
+            </button>
+
+            <div>
+
+                <div class="collection-title">
+                    @selectedCollection.Name
+                </div>
+
+                <div class="collection-path">
+                    Libreria / @selectedCollection.Name
+                </div>
+
+            </div>
+
+        </div>
+    }
+
+
+    @if (loading)
+    {
+        <div class="library-message">
+            Caricamento...
+        </div>
+    }
+    else if (!string.IsNullOrWhiteSpace(error))
+    {
+        <div class="library-error">
+            @error
+        </div>
+    }
+    else if (mediaItems.Count == 0)
+    {
+        <div class="library-message">
+            Nessun elemento presente nella libreria.
+        </div>
+    }
+    else
+    {
+        <div class="media-grid">
+
+            @foreach (var media in mediaItems)
+            {
+                <div class="media-card"
+                     @onclick="() => OpenCollection(media)"
+                     style="cursor: @(media.IsFolder ? "pointer" : "default")">
+
+                    <div class="media-preview">
+
+                        @if (media.IsFolder)
+                        {
+                            <span>📁</span>
+                        }
+                        else if (media.ContentType.StartsWith("image/"))
+                        {
+                            <span>🖼️</span>
+                        }
+                        else if (media.ContentType.StartsWith("video/"))
+                        {
+                            @*<span>▶️</span>*@
+                            <video class="media-video"
+                                   src="@GetMediaUrl(media)"
+                                   crossorigin="use-credentials"
+                                   muted                                   
+                                   playsinline
+                                   preload="metadata">
+                            </video>
+                            @*autoplay e loop servono per riprodurre il video nella cards come preview*@
+
+
+                        }
+                        else if (media.ContentType == "application/pdf")
+                        {
+                            <span>📄</span>
+                        }
+                        else
+                        {
+                            <span>📦</span>
+                        }
+
+                    </div>
+
+                    <div class="media-info">
+
+                        <div class="media-name"
+                             title="@media.Name">
+                            @media.Name
+                        </div>
+
+                        <div class="media-type">
+                            @GetMediaDescription(media)
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+    }
+
+</div>
+
+
+@code {
+
+    private const string WorkerBaseUrl =
+        "https://first.marcomaria-zora.workers.dev/api/dav";
+
+
+    private bool loading;
+
+    private string? error;
+
+
+    private List<CloudMediaItem> mediaItems = new();
+
+
+    private CloudCollection? selectedCollection;
+
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadCollections();
+    }
+
+
+    // ---------------------------------------------------------
+    // CARICA LA ROOT DELLA LIBRERIA: UPLOADS
+    // ---------------------------------------------------------
+
+    private async Task LoadCollections()
+    {
+        error = null;
+
+        mediaItems.Clear();
+
+        selectedCollection = null;
+
+
+        if (string.IsNullOrWhiteSpace(Session.Username) ||
+            string.IsNullOrWhiteSpace(Session.Password))
+        {
+            error = "Nessuna connessione cloud attiva.";
+            return;
+        }
+
+
+        loading = true;
+
+
+        try
+        {
+            string encodedUsername =
+                Uri.EscapeDataString(Session.Username);
+
+
+            /*
+             * UPLOADS è la root logica della libreria Lumenyx.
+             */
+
+            string webDavUrl =
+                $"{WorkerBaseUrl}/remote.php/dav/files/{encodedUsername}/";
+
+
+            using HttpRequestMessage request =
+                CreatePropFindRequest(webDavUrl);
+
+
+            using HttpResponseMessage response =
+                await Http.SendAsync(request);
+
+
+            if (response.StatusCode ==
+                    HttpStatusCode.MultiStatus ||
+                response.IsSuccessStatusCode)
+            {
+                string xml =
+                    await response.Content.ReadAsStringAsync();
+
+
+                ParseMedia(xml);
+
+                return;
+            }
+
+
+            error =
+                $"Errore durante la lettura del cloud: " +
+                $"{(int)response.StatusCode} " +
+                $"{response.ReasonPhrase}";
+        }
+        catch (Exception ex)
+        {
+            error =
+                $"Errore durante la lettura del cloud: {ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // APRE UNA COLLEZIONE
+    // ---------------------------------------------------------
+
+    private async Task OpenCollection(
+        CloudCollection collection)
+    {
+        error = null;
+
+        mediaItems.Clear();
+
+        selectedCollection = collection;
+
+        loading = true;
+
+
+        try
+        {
+            string path =
+                collection.Path;
+
+
+            if (!path.StartsWith("/"))
+            {
+                path = "/" + path;
+            }
+
+
+            string webDavUrl =
+                WorkerBaseUrl + path;
+
+
+            using HttpRequestMessage request =
+                CreatePropFindRequest(webDavUrl);
+
+
+            using HttpResponseMessage response =
+                await Http.SendAsync(request);
+
+
+            if (response.StatusCode ==
+                    HttpStatusCode.MultiStatus ||
+                response.IsSuccessStatusCode)
+            {
+                string xml =
+                    await response.Content.ReadAsStringAsync();
+
+
+                ParseMedia(xml);
+
+                return;
+            }
+
+
+            error =
+                $"Errore durante la lettura della raccolta: " +
+                $"{(int)response.StatusCode} " +
+                $"{response.ReasonPhrase}";
+        }
+        catch (Exception ex)
+        {
+            error =
+                $"Errore durante la lettura della raccolta: " +
+                $"{ex.Message}";
+        }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+
+    // ---------------------------------------------------------
+    // APRE UNA CARTELLA VISUALIZZATA NELLA GRIGLIA
+    // ---------------------------------------------------------
+
+    private async Task OpenCollection(
+        CloudMediaItem media)
+    {
+        if (!media.IsFolder)
+            return;
+
+
+        await OpenCollection(
+            new CloudCollection
+            {
+                Name = media.Name,
+                Path = media.Path
+            });
+    }
+
+
+    // ---------------------------------------------------------
+    // CREA LA RICHIESTA PROPFIND
+    // ---------------------------------------------------------
+
+    private HttpRequestMessage CreatePropFindRequest(
+        string webDavUrl)
+    {
+        HttpRequestMessage request = new(
+            new HttpMethod("PROPFIND"),
+            webDavUrl);
+
+
+        request.Headers.TryAddWithoutValidation(
+            "X-Nextcloud-Username",
+            Session.Username);
+
+
+        request.Headers.TryAddWithoutValidation(
+            "X-Nextcloud-Password",
+            Session.Password);
+
+
+        request.Headers.TryAddWithoutValidation(
+            "Depth",
+            "1");
+
+
+        const string requestBody = """
+            <?xml version="1.0" encoding="utf-8" ?>
+            <d:propfind xmlns:d="DAV:">
+                <d:prop>
+                    <d:displayname />
+                    <d:resourcetype />
+                    <d:getcontenttype />
+                    <d:getcontentlength />
+                </d:prop>
+            </d:propfind>
+            """;
+
+
+        request.Content = new StringContent(
+            requestBody,
+            Encoding.UTF8,
+            "application/xml");
+
+
+        return request;
+    }
+
+
+    // ---------------------------------------------------------
+    // PARSE CARTELLE + FILE
+    // ---------------------------------------------------------
+
+    private void ParseMedia(string xml)
+    {
+        XDocument document =
+            XDocument.Parse(xml);
+
+
+        XNamespace dav =
+            "DAV:";
+
+
+        var responses =
+            document
+                .Descendants(dav + "response")
+                .Skip(1);
+
+
+        foreach (var response in responses)
+        {
+            string? href =
+                response
+                    .Element(dav + "href")
+                    ?.Value;
+
+
+            if (string.IsNullOrWhiteSpace(href))
+                continue;
+
+
+            var resourceType =
+                response
+                    .Descendants(dav + "resourcetype")
+                    .FirstOrDefault();
+
+
+            bool isFolder =
+                resourceType?
+                    .Descendants(dav + "collection")
+                    .Any() == true;
+
+
+            string? displayName =
+                response
+                    .Descendants(dav + "displayname")
+                    .FirstOrDefault()
+                    ?.Value;
+
+
+            string? contentType =
+                response
+                    .Descendants(dav + "getcontenttype")
+                    .FirstOrDefault()
+                    ?.Value;
+
+
+            string? sizeText =
+                response
+                    .Descendants(dav + "getcontentlength")
+                    .FirstOrDefault()
+                    ?.Value;
+
+
+            long.TryParse(
+                sizeText,
+                out long size);
+
+
+            string decodedHref =
+                Uri.UnescapeDataString(href);
+
+
+            string name =
+                !string.IsNullOrWhiteSpace(displayName)
+                    ? displayName
+                    : decodedHref
+                        .TrimEnd('/')
+                        .Split('/')
+                        .Last();
+
+
+            mediaItems.Add(
+                new CloudMediaItem
+                {
+                    Name = name,
+                    Path = href,
+                    ContentType = contentType ?? "",
+                    Size = size,
+                    IsFolder = isFolder
+                });
+        }
+
+
+        // Prima le collezioni, poi i file
+        mediaItems =
+            mediaItems
+                .OrderByDescending(x => x.IsFolder)
+                .ThenBy(x => x.Name)
+                .ToList();
+    }
+
+
+    // ---------------------------------------------------------
+    // TORNA ALLA ROOT UPLOADS
+    // ---------------------------------------------------------
+
+    private async Task CloseCollection()
+    {
+        selectedCollection = null;
+
+        await LoadCollections();
+    }
+
+
+    // ---------------------------------------------------------
+    // DESCRIZIONE ELEMENTO
+    // ---------------------------------------------------------
+
+    private string GetMediaDescription(
+        CloudMediaItem media)
+    {
+        if (media.IsFolder)
+            return "Collezione multimediale";
+
+
+        if (media.ContentType.StartsWith("image/"))
+            return "Immagine";
+
+
+        if (media.ContentType.StartsWith("video/"))
+            return "Video";
+
+
+        if (media.ContentType == "application/pdf")
+            return "PDF";
+
+
+        if (!string.IsNullOrWhiteSpace(
+                media.ContentType))
+        {
+            return media.ContentType;
+        }
+
+
+        return "File";
+    }
+
+
+    private string GetMediaUrl(CloudMediaItem media)
+    {
+        string path = media.Path;
+
+        if (!path.StartsWith("/"))
+            path = "/" + path;
+
+        return WorkerBaseUrl + path;
+    }
+
+   
+    // ---------------------------------------------------------
+    // MODELLI LOCALI
+    // ---------------------------------------------------------
+
+    private sealed class CloudCollection
+    {
+        public string Name { get; set; } = "";
+
+        public string Path { get; set; } = "";
+    }
+
+
+    private sealed class CloudMediaItem
+    {
+        public string Name { get; set; } = "";
+
+        public string Path { get; set; } = "";
+
+        public string ContentType { get; set; } = "";
+
+        public long Size { get; set; }
+
+        public bool IsFolder { get; set; }
+    }
+}

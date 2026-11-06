@@ -1,5 +1,5 @@
 ﻿@inject NextcloudSession NextcloudSession
-
+@using Microsoft.AspNetCore.Components.WebAssembly.Http
 
 @page "/nextcloud-login"
 
@@ -197,6 +197,9 @@
                 requestBody,
                 Encoding.UTF8,
                 "application/xml");
+
+
+            request.SetBrowserRequestCredentials(BrowserRequestCredentials.Include);    // IMPORTANTE: Include le credenziali per le richieste cross-origin.    il Worker invia un coockie di sessione a Nextcloud, quindi è necessario includere le credenziali.
 
             using HttpResponseMessage response =
                 await Http.SendAsync(request);

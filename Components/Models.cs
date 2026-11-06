@@ -32,19 +32,7 @@
         public int DurationSeconds { get; set; } = 5;
     }
 
-    public class MediaItem
-    {
-        public string Id { get; set; } = "";
-        public string Type { get; set; } = "";
-        public string Name { get; set; } = "";
-        public string Url { get; set; } = "";
-        public string ThumbnailUrl { get; set; } = string.Empty;
-        public double DurationSeconds { get; set; }
-        // New: collection/grouping for library rows (e.g. "Trending", "Recommended")
-        //public string Collection { get; set; } = "";
-
-        public bool IsSelected { get; set; } = false;
-    }
+   
 
     public class CollectionModel
     {
@@ -82,4 +70,32 @@
         }
     }
 
+    public class MediaCollection
+    {
+        public string Id { get; set; } = "";
+        public string Name { get; set; } = "";
+        public List<MediaItem> Items { get; set; } = new();
+    }
+
+   
+    public class MediaItem
+    {
+        public string Id { get; set; } = "";
+        public string Type { get; set; } = "";
+        public string Name { get; set; } = "";
+        public string Url { get; set; } = "";
+        public string ThumbnailUrl { get; set; } = string.Empty;
+        public double DurationSeconds { get; set; }
+        // New: collection/grouping for library rows (e.g. "Trending", "Recommended")
+        //public string Collection { get; set; } = "";
+        public string ContentType { get; set; } = "";
+        public long Size { get; set; }
+        public bool IsSelected { get; set; } = false;
+    }
+    public interface ICloudStorage
+    {
+        Task<List<MediaCollection>> GetCollectionsAsync();
+
+        Task<List<MediaItem>> GetMediaAsync(string collectionId);
+    }
 }

@@ -1,0 +1,174 @@
+/* CSS for CloudLibrary component */
+.cloud-library {
+    padding: 32px;
+    color: #f5f5f5;
+}
+
+.library-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 32px;
+}
+
+    .library-header h1 {
+        margin: 0;
+        font-size: 30px;
+        font-weight: 700;
+    }
+
+    .library-header p {
+        margin: 6px 0 0;
+        color: #9ca3af;
+    }
+
+.refresh-button {
+    border: 1px solid #333;
+    background: #202020;
+    color: white;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+}
+
+    .refresh-button:hover {
+        background: #2b2b2b;
+    }
+
+.collections-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 18px;
+}
+
+.collection-card {
+    min-height: 150px;
+    padding: 22px;
+    border-radius: 12px;
+    background: #181818;
+    border: 1px solid #292929;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    cursor: pointer;
+    transition: background-color 0.15s ease, transform 0.15s ease;
+}
+
+    .collection-card:hover {
+        background: #222;
+        transform: translateY(-2px);
+    }
+
+.collection-icon {
+    font-size: 38px;
+}
+
+.collection-info {
+    margin-top: 22px;
+}
+
+.collection-name {
+    font-size: 17px;
+    font-weight: 600;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.collection-subtitle {
+    margin-top: 5px;
+    font-size: 13px;
+    color: #888;
+}
+
+.library-message {
+    color: #aaa;
+    padding: 30px 0;
+}
+
+.library-error {
+    color: #ff6868;
+    padding: 20px;
+    border-radius: 8px;
+    background: rgba(255, 50, 50, 0.08);
+    border: 1px solid rgba(255, 80, 80, 0.2);
+}
+.collection-header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 24px;
+}
+
+.back-button {
+    width: 42px;
+    height: 42px;
+    border: none;
+    border-radius: 50%;
+    background: #202020;
+    color: white;
+    font-size: 22px;
+    cursor: pointer;
+}
+
+    .back-button:hover {
+        background: #303030;
+    }
+
+.collection-title {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.collection-path {
+    color: #888;
+    font-size: 13px;
+    margin-top: 3px;
+}
+
+.media-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 18px;
+}
+
+.media-card {
+    background: #181818;
+    border: 1px solid #292929;
+    border-radius: 12px;
+    overflow: hidden;
+}
+
+.media-preview {
+    height: 130px;
+    background: #111;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+}
+
+.media-info {
+    padding: 14px;
+}
+
+.media-name {
+    font-size: 14px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.media-type {
+    font-size: 11px;
+    color: #888;
+    margin-top: 5px;
+}
+
+.media-video {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
